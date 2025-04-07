@@ -79,6 +79,21 @@ router.get('/assigned', auth, isGraphics, graphicController.getUserAssignedOrder
 
 router.post('/updateWorkQueue',auth,isGraphics,graphicController.updateWorkQueueStatus);
 
+router.post('/fileupload',auth,isGraphics,graphicController.uploadFile);
+
+
+// Keep existing route for backward compatibility
+router.get('/files/download/:documentId/:fileIndex', graphicController.downloadCadFile);
+
+// Add new route for downloading all files as ZIP
+router.get('/files/download-all/:documentId', graphicController.downloadAllFiles);
+
+// Optional route for downloading all files of a specific type
+router.get('/files/download-all-type/:documentId', graphicController.downloadAllFilesOfType);
+
+// Keep existing route for listing files
+router.get('/files/order/:orderId', graphicController.getFilesByOrder);
+
 
 
 
