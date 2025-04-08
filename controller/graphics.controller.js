@@ -584,6 +584,7 @@ exports.updateWorkQueueStatus = async (req, res) => {
     }
 };
 
+
 const{cadFileUpload } = require('../utils/CadFileUploader');
 
 
@@ -1037,5 +1038,146 @@ exports.getFilesByOrder = async (req, res) => {
       message: "Error fetching files",
       error: error.message
     });
+  }
+};
+
+
+exports.removeFromWorkQueue = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+      const { workQueueId } = req.params;
+      const { reason, completionNotes } = req.body;
+
+      // Validate input
+      if (!workQueueId) {
+          return res.status(400).json({
+              success: false,
+              message: "Work Queue ID is required"
+          });
+      }
+
+      console.log("Data validated successfully in remove from work queue controller");
+
+      // Find the work queue item
+      const workQueueItem = await WorkQueue.findById(workQueueId).session(session);
+
+      if (!workQueueItem) {
+          return res.status(404).json({
+              success: false,
+              message: "Work Queue item not found"
+          });
+      }
+
+      // Find the associated order
+      const order = await Order.findById(workQueueItem.order).session(session);
+      
+      if (!order) {
+          return res.status(404).json({
+              success: false,
+              message: "Associated order not found"
+          });
+      }
+
+      // Update order status
+      order.status = 'Completed';
+      order.completionNotes = completionNotes || '';
+      order.completedAt = new Date();
+      order.completedBy = req.user.id;
+      await order.save({ session });
+
+      // Update work queue item
+      workQueueItem.status = 'Completed';
+      workQueueItem.completionReason = reason || 'Task Completed';
+      workQueueItem.completedAt = new Date();
+      
+      // Update all pending processing steps to completed
+      workQueueItem.processingSteps.forEach(step => {
+          if (step.status === 'Pending') {
+              step.status = 'Completed';
+              step.completedAt = new Date();
+              step.completedBy = req.user.id;
+          }
+      });
+
+      await workQueueItem.save({ session });
+
+      // Cancel any scheduled jobs for this order if they exist
+      await agenda.cancel({ 'data.workQueueId': workQueueItem._id });
+
+      // Notify the customer that their order is complete
+      await sendOrderCompletionNotification(req, order);
+
+      // Commit transaction
+      await session.commitTransaction();
+      session.endSession();
+
+      // Populate and return updated order details
+      const populatedOrder = await Order.findById(order._id)
+          .populate("customer", "name email")
+          .populate("assignedTo", "name email")
+          .populate("createdBy", "name email")
+          // .populate("completedBy", "name email");
+
+      res.status(200).json({
+          success: true,
+          message: "Item successfully removed from work queue",
+          data: {
+              order: populatedOrder,
+              workQueue: workQueueItem
+          }
+      });
+
+  } catch (error) {
+      // Abort transaction
+      if (session.inTransaction()) {
+          await session.abortTransaction();
+      }
+      session.endSession();
+
+      console.error("Error removing from work queue", error);
+      return res.status(400).json({
+          success: false,
+          message: "Problem removing the item from work queue",
+          error: error.message
+      });
+  }
+};
+
+
+// Helper function to send notification to customer when order is complete
+const sendOrderCompletionNotification = async (req, order) => {
+  try {
+      // Find customer details
+      const customer = await User.findById(order.customer);
+      
+      if (!customer) {
+          console.error("Customer not found for notification");
+          return;
+      }
+
+      // Create notification
+      const notification = new Notification({
+          recipient: customer._id,
+          title: "Order Completed",
+          message: `Your order #${order._id} has been completed.`,
+          type: "order_completion",
+          metadata: {
+              orderId: order._id
+          }
+      });
+
+      await notification.save();
+
+      // If you have real-time notifications (like Socket.io), emit here
+      // io.to(customer._id).emit('new_notification', notification);
+
+      // Optionally, send an email notification
+      // await sendEmail(customer.email, "Order Completed", `Your order #${order._id} has been completed.`);
+
+      console.log(`Completion notification sent to customer: ${customer._id}`);
+  } catch (error) {
+      console.error("Error sending completion notification:", error);
   }
 };

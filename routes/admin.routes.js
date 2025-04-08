@@ -32,7 +32,10 @@ const{
 
     }= require("../controller/order.controller")
 
+
 const graphicController = require("../controller/graphics.controller");
+
+const displayController = require("../controller/display.controller");
     // const {localFileUpload}= require("../config/cloudinary")
     
 const{localFileUpload}= require("../utils/ImageUploader")
@@ -92,6 +95,12 @@ router.get('/files/download-all-type/:documentId', auth, isAdmin, isSuperAdmin ,
 
 // Keep existing route for listing files
 router.get('/files/order/:orderId', auth, isAdmin, isSuperAdmin , graphicController.getFilesByOrder);
+
+
+
+//display routes
+router.post("/display/assignOrder/:orderId",auth,isAdmin,isSuperAdmin,displayController.assignOrderToDisplay);
+
 
 
 

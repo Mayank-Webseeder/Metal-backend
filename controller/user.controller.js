@@ -53,6 +53,58 @@ exports.signUp =async(req,res)=>{
     }
 }
 
+
+
+const nodemailer = require("nodemailer");
+
+
+// Nodemailer transporter setup
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+
+const sendEmail = async (email, password, name ) => {
+  try {
+    console.log("this is", email, password, name,  );
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Welcome Aboard: Your Account has been  Created",
+      text: `Dear ${name},
+
+
+We are pleased to inform you that your account has been successfully created.
+
+
+
+Login Credentials:
+- *Email:* ${email}
+- *Password:* ${password}
+
+For security reasons, we recommend changing your password upon your first login.
+
+If you have any questions or need further assistance, please feel free to reach out.
+
+Best regards, 
+Admin
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent: ", info.response);
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
+};
+
+
+
+
 exports.createAccount =async(req,res)=>{
     try {
         const {
@@ -104,6 +156,8 @@ exports.createAccount =async(req,res)=>{
             password:hashedPassword,
             accountType
         })
+
+        await sendEmail(email, password, firstName, );
 
         return res.status(200).json({
             success:true,
