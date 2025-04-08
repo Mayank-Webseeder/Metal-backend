@@ -5,7 +5,7 @@ const {storage} = require("../config/cloudinary");
 const upload = multer({ storage });
 
 
-const {auth, isAdmin ,isGraphics} = require("../middleware/auth");
+const {auth, isAdmin ,isGraphics, isSuperAdmin} = require("../middleware/auth");
 
 const {adminController}= require("../controller/admin.controller");
 const {
@@ -81,18 +81,17 @@ router.post('/updateWorkQueue',auth,isGraphics,graphicController.updateWorkQueue
 
 router.post('/fileupload',auth,isGraphics,graphicController.uploadFile);
 
-
 // Keep existing route for backward compatibility
-router.get('/files/download/:documentId/:fileIndex', graphicController.downloadCadFile);
+router.get('/files/download/:documentId/:fileIndex', auth, isAdmin, isSuperAdmin , graphicController.downloadCadFile);
 
 // Add new route for downloading all files as ZIP
-router.get('/files/download-all/:documentId', graphicController.downloadAllFiles);
+router.get('/files/download-all/:documentId', auth, isAdmin, isSuperAdmin , graphicController.downloadAllFiles);
 
 // Optional route for downloading all files of a specific type
-router.get('/files/download-all-type/:documentId', graphicController.downloadAllFilesOfType);
+router.get('/files/download-all-type/:documentId', auth, isAdmin, isSuperAdmin , graphicController.downloadAllFilesOfType);
 
 // Keep existing route for listing files
-router.get('/files/order/:orderId', graphicController.getFilesByOrder);
+router.get('/files/order/:orderId', auth, isAdmin, isSuperAdmin , graphicController.getFilesByOrder);
 
 
 
