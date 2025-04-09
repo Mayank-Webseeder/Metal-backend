@@ -1181,3 +1181,80 @@ const sendOrderCompletionNotification = async (req, order) => {
       console.error("Error sending completion notification:", error);
   }
 };
+
+exports.deleteCadFileOrPhotoByIndex = async (req, res) => {
+  try {
+    const { orderId, type, index } = req.body; // type = 'photo' or 'CadFile'
+
+    console.log("orderId is:",orderId);
+    console.log("type is:",type);
+    console.log("index is:",index);
+    const userId = req.user.id;
+
+    // Step 1: Validate order and user
+    const order = await Order.findOne({
+      _id: orderId,
+      assignedTo: userId,
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found or not assigned to this user",
+      });
+    }
+
+    // Step 2: Find CAD entry
+    const cad = await Cad.findOne({ order: orderId });
+    if (!cad) {
+      return res.status(404).json({
+        success: false,
+        message: "CAD entry not found for this order",
+      });
+    }
+
+    // Step 3: Validate type and index
+    if (!['photo', 'CadFile'].includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid type. Must be 'photo' or 'CadFile'.",
+      });
+    }
+
+    const filesArray = cad[type];
+    if (!Array.isArray(filesArray) || index < 0 || index >= filesArray.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid index for deletion",
+      });
+    }
+
+    // Step 4: Prevent deletion if it would make the array empty
+    if (filesArray.length === 1) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot delete the last remaining ${type}. At least one must remain.`,
+      });
+    }
+
+    // Step 5: Remove the file
+    const removedFile = filesArray.splice(index, 1);
+
+    // Step 6: Save updated CAD entry
+    await cad.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `${type} at index ${index} deleted successfully`,
+      removed: removedFile[0],
+      updatedCad: cad,
+    });
+
+  } catch (error) {
+    console.error("Error deleting CAD file or photo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};

@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Order = require("../models/order.model");
 const WorkQueue = require("../models/workQueueItem.model");
 const User = require("../models/user.models");
+const Cad = require("../models/cad.model");
 
 const socketManager = require('../middlewares/socketmanager.js');
 
@@ -81,3 +82,109 @@ exports.assignOrderToDisplay = async (req, res) => {
     }
   };
   
+  exports.getCadFilesByOrderAndAssignedUser = async (req, res) => {
+    try {
+      console.log("value  of req.user is:",req.user);
+      const { orderId } = req.body;
+      const assignedTo=req.user.id;
+      console.log("orderId is:",orderId);
+      console.log("assignedTo",assignedTo);
+  
+      // Step 1: Validate if the order exists and is assigned to the given user
+      const order = await Order.findOne({
+        _id: orderId,
+        assignedTo: assignedTo
+      });
+      console.log("order is:",order);
+  
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found or not assigned to this user",
+        });
+      }
+  
+      // Step 2: Find related CAD entry
+      const cad = await Cad.findOne({ order: orderId });
+  
+      if (!cad) {
+        return res.status(404).json({
+          success: false,
+          message: "CAD data not found for this order",
+        });
+      }
+  
+      // Step 3: Send photo and CadFile
+      return res.status(200).json({
+        success: true,
+        data: {
+          photo: cad.photo,
+          CadFile: cad.CadFile,
+        },
+      });
+  
+    } catch (error) {
+      console.error("Error fetching CAD files:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  };
+
+
+  exports. getCadFilesByOrderAndAssignedUser = async (req, res) => {
+    try {
+      console.log("value  of req.user is:",req.user);
+      const { orderId } = req.body;
+      const assignedTo=req.user.id;
+      console.log("orderId is:",orderId);
+      console.log("assignedTo",assignedTo);
+  
+      // Step 1: Validate if the order exists and is assigned to the given user
+      const order = await Order.findOne({
+        _id: orderId,
+        assignedTo: assignedTo
+      });
+      console.log("order is:",order);
+  
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found or not assigned to this user",
+        });
+      }
+  
+      // Step 2: Find related CAD entry
+      const cad = await Cad.findOne({ order: orderId });
+  
+      if (!cad) {
+        return res.status(404).json({
+          success: false,
+          message: "CAD data not found for this order",
+        });
+      }
+  
+      // Step 3: Send photo and CadFile
+      return res.status(200).json({
+        success: true,
+        data: {
+          photo: cad.photo,
+          CadFile: cad.CadFile,
+        },
+      });
+  
+    } catch (error) {
+      console.error("Error fetching CAD files:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  };
+  
+  
+  
+  
+
+ 

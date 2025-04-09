@@ -85,13 +85,13 @@ router.post('/updateWorkQueue',auth,isGraphics,graphicController.updateWorkQueue
 router.post('/fileupload',auth,isGraphics,graphicController.uploadFile);
 
 // Keep existing route for backward compatibility
-router.get('/files/download/:documentId/:fileIndex', auth, isDisplay, isDisplayAndAdmin, isAdmin, isSuperAdmin , graphicController.downloadCadFile);
+router.get('/files/download/:documentId/:fileIndex', auth, graphicController.downloadCadFile);
 
 // Add new route for downloading all files as ZIP
-router.get('/files/download-all/:documentId', auth, isAdmin, isDisplay, isSuperAdmin, isDisplayAndAdmin, graphicController.downloadAllFiles);
+router.get('/files/download-all/:documentId', auth, graphicController.downloadAllFiles);
 
 // Optional route for downloading all files of a specific type
-router.get('/files/download-all-type/:documentId', auth, isAdmin, isDisplay, isSuperAdmin ,isDisplayAndAdmin, graphicController.downloadAllFilesOfType);
+router.get('/files/download-all-type/:documentId', auth,  graphicController.downloadAllFilesOfType);
 
 // Keep existing route for listing files
 router.get('/files/order/:orderId', auth, isAdmin, isSuperAdmin , graphicController.getFilesByOrder);
@@ -100,6 +100,24 @@ router.get('/file/order/:orderId', auth, isDisplay, graphicController.getFilesBy
 
 //display routes
 router.post("/display/assignOrder/:orderId",auth,isAdmin, isSuperAdmin,displayController.assignOrderToDisplay);
+
+
+
+
+// router.get('/file/download/:documentId/:fileIndex', auth,  graphicController.downloadCadFile);
+
+// // Add new route for downloading all files as ZIP
+// router.get('/file/download-all/:documentId', auth,  graphicController.downloadAllFiles);
+
+// // Optional route for downloading all files of a specific type
+// router.get('/file/download-all-type/:documentId', auth,  graphicController.downloadAllFilesOfType);
+
+
+
+router.post("/grpahics/deleteCadFile",auth,graphicController.deleteCadFileOrPhotoByIndex);
+
+router.get("/display/getCadFilesAndPhoto",auth,displayController.getCadFilesByOrderAndAssignedUser);
+
 
 
 
