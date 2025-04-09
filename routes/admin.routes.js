@@ -5,7 +5,7 @@ const {storage} = require("../config/cloudinary");
 const upload = multer({ storage });
 
 
-const {auth, isAdmin ,isGraphics, isSuperAdmin} = require("../middleware/auth");
+const {auth, isAdmin ,isGraphics, isSuperAdmin, isDisplay, isGraphicsDisplay} = require("../middleware/auth");
 
 const {adminController}= require("../controller/admin.controller");
 const {
@@ -78,7 +78,7 @@ router.get('/pending', auth, isAdmin, graphicController.getPendingOrders);
 router.put( '/reassign', auth, isAdmin, graphicController.reassignUnassignedOrders);
 
 // Get user's assigned orders (for graphics team)
-router.get('/assigned', auth, isGraphics, graphicController.getUserAssignedOrders);
+router.get('/assigned', auth, isGraphicsDisplay, graphicController.getUserAssignedOrders);
 
 router.post('/updateWorkQueue',auth,isGraphics,graphicController.updateWorkQueueStatus);
 
@@ -95,7 +95,6 @@ router.get('/files/download-all-type/:documentId', auth, isAdmin, isSuperAdmin ,
 
 // Keep existing route for listing files
 router.get('/files/order/:orderId', auth, isAdmin, isSuperAdmin , graphicController.getFilesByOrder);
-
 
 
 //display routes
