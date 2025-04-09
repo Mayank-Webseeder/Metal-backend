@@ -183,6 +183,29 @@ const isGraphicsDisplay = async(req,res,next)=>{
     }
 }
 
+const isDisplayAndAdmin = async(req,res,next)=>{
+
+    try {
+        
+        if(req.user.accountType!=="Display" && req.user.accountType!=="Admin"){
+            return res.status(401).json({
+                success:false,
+                message:"this is protected route for Display and Admin only"
+            })
+        }
+        next();
+        
+    } catch (error) {
+        console.log("error in Display and Admin protected route")
+        return res.status(402).json({
+            success:false,
+            error:error.message,
+            message:"user role can't be verified"
+        })
+        
+    }
+}
 
 
-module.exports={auth,isAdmin,isSuperAdmin,isAccount,isGraphics, isDisplay, isGraphicsDisplay};
+
+module.exports={auth,isAdmin,isSuperAdmin,isAccount,isGraphics, isDisplay, isGraphicsDisplay, isDisplayAndAdmin};

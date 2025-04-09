@@ -5,7 +5,7 @@ const {storage} = require("../config/cloudinary");
 const upload = multer({ storage });
 
 
-const {auth, isAdmin ,isGraphics, isSuperAdmin, isDisplay, isGraphicsDisplay} = require("../middleware/auth");
+const {auth, isAdmin ,isGraphics, isSuperAdmin, isDisplay, isGraphicsDisplay, isDisplayAndAdmin} = require("../middleware/auth");
 
 const {adminController}= require("../controller/admin.controller");
 const {
@@ -85,22 +85,21 @@ router.post('/updateWorkQueue',auth,isGraphics,graphicController.updateWorkQueue
 router.post('/fileupload',auth,isGraphics,graphicController.uploadFile);
 
 // Keep existing route for backward compatibility
-router.get('/files/download/:documentId/:fileIndex', auth, isAdmin, isSuperAdmin , graphicController.downloadCadFile);
+router.get('/files/download/:documentId/:fileIndex', auth, isDisplay, isDisplayAndAdmin, isAdmin, isSuperAdmin , graphicController.downloadCadFile);
 
 // Add new route for downloading all files as ZIP
-router.get('/files/download-all/:documentId', auth, isAdmin, isSuperAdmin , graphicController.downloadAllFiles);
+router.get('/files/download-all/:documentId', auth, isAdmin, isDisplay, isSuperAdmin, isDisplayAndAdmin, graphicController.downloadAllFiles);
 
 // Optional route for downloading all files of a specific type
-router.get('/files/download-all-type/:documentId', auth, isAdmin, isSuperAdmin , graphicController.downloadAllFilesOfType);
+router.get('/files/download-all-type/:documentId', auth, isAdmin, isDisplay, isSuperAdmin ,isDisplayAndAdmin, graphicController.downloadAllFilesOfType);
 
 // Keep existing route for listing files
 router.get('/files/order/:orderId', auth, isAdmin, isSuperAdmin , graphicController.getFilesByOrder);
 
+router.get('/file/order/:orderId', auth, isDisplay, graphicController.getFilesByOrder);
 
 //display routes
-router.post("/display/assignOrder/:orderId",auth,isAdmin,isSuperAdmin,displayController.assignOrderToDisplay);
-
-
+router.post("/display/assignOrder/:orderId",auth,isAdmin, isSuperAdmin,displayController.assignOrderToDisplay);
 
 
 
