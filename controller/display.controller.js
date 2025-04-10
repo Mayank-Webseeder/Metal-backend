@@ -94,20 +94,23 @@ exports.assignOrderToDisplay = async (req, res) => {
     }
   };
   
+  
+
   exports.getCadFilesByOrderAndAssignedUser = async (req, res) => {
     try {
-      console.log("value  of req.user is:",req.user);
+      
       const { orderId } = req.body;
-      const assignedTo=req.user.id;
-      console.log("orderId is:",orderId);
-      console.log("assignedTo",assignedTo);
+      const assignedTo = req.user.id;
+  
+      
   
       // Step 1: Validate if the order exists and is assigned to the given user
       const order = await Order.findOne({
         _id: orderId,
-        assignedTo: assignedTo
+        assignedTo: assignedTo,
       });
-      console.log("order is:",order);
+  
+      
   
       if (!order) {
         return res.status(404).json({
@@ -116,74 +119,28 @@ exports.assignOrderToDisplay = async (req, res) => {
         });
       }
   
-      // Step 2: Find related CAD entry
-      const cad = await Cad.findOne({ order: orderId });
+      // Step 2: Find all CAD entries related to the order
+      const cadFiles = await Cad.find({ order: orderId });
+      
   
-      if (!cad) {
+      if (!cadFiles || cadFiles.length === 0) {
         return res.status(404).json({
           success: false,
-          message: "CAD data not found for this order",
+          message: "No CAD data found for this order",
         });
       }
   
-      // Step 3: Send photo and CadFile
+      // Step 3: Send all CAD data (e.g., photo and CadFile)
+      const formattedCadFiles = cadFiles.map((cad) => ({
+        photo: cad.photo,
+        CadFile: cad.CadFile,
+      }));
+
+      
+  
       return res.status(200).json({
         success: true,
-        data: {
-          photo: cad.photo,
-          CadFile: cad.CadFile,
-        },
-      });
-  
-    } catch (error) {
-      console.error("Error fetching CAD files:", error);
-      res.status(500).json({
-        success: false,
-        message: "Internal server error",
-      });
-    }
-  };
-
-
-  exports. getCadFilesByOrderAndAssignedUser = async (req, res) => {
-    try {
-      console.log("value  of req.user is:",req.user);
-      const { orderId } = req.body;
-      const assignedTo=req.user.id;
-      console.log("orderId is:",orderId);
-      console.log("assignedTo",assignedTo);
-  
-      // Step 1: Validate if the order exists and is assigned to the given user
-      const order = await Order.findOne({
-        _id: orderId,
-        assignedTo: assignedTo
-      });
-      console.log("order is:",order);
-  
-      if (!order) {
-        return res.status(404).json({
-          success: false,
-          message: "Order not found or not assigned to this user",
-        });
-      }
-  
-      // Step 2: Find related CAD entry
-      const cad = await Cad.findOne({ order: orderId });
-  
-      if (!cad) {
-        return res.status(404).json({
-          success: false,
-          message: "CAD data not found for this order",
-        });
-      }
-  
-      // Step 3: Send photo and CadFile
-      return res.status(200).json({
-        success: true,
-        data: {
-          photo: cad.photo,
-          CadFile: cad.CadFile,
-        },
+        data: formattedCadFiles,
       });
   
     } catch (error) {
@@ -195,6 +152,8 @@ exports.assignOrderToDisplay = async (req, res) => {
     }
   };
   
+
+
 
 
 // Original controller to download single file (kept for backward compatibility)

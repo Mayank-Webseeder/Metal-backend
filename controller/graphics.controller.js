@@ -1186,14 +1186,15 @@ const sendOrderCompletionNotification = async (req, order) => {
   }
 };
 
+
 exports.deleteCadFileOrPhotoByIndex = async (req, res) => {
   try {
     const { orderId, type, index } = req.body; // type = 'photo' or 'CadFile'
-
-    console.log("orderId is:",orderId);
-    console.log("type is:",type);
-    console.log("index is:",index);
     const userId = req.user.id;
+
+    console.log("orderId is:", orderId);
+    console.log("type is:", type);
+    console.log("index is:", index);
 
     // Step 1: Validate order and user
     const order = await Order.findOne({
@@ -1208,16 +1209,17 @@ exports.deleteCadFileOrPhotoByIndex = async (req, res) => {
       });
     }
 
-    // Step 2: Find CAD entry
-    const cad = await Cad.findOne({ order: orderId });
-    if (!cad) {
+    // Step 2: Fetch all CAD docs for this order
+    const cadDocs = await Cad.find({ order: orderId });
+
+    if (!cadDocs || cadDocs.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "CAD entry not found for this order",
+        message: "No CAD entries found for this order",
       });
     }
 
-    // Step 3: Validate type and index
+    // Step 3: Validate type
     if (!['photo', 'CadFile'].includes(type)) {
       return res.status(400).json({
         success: false,
@@ -1225,33 +1227,39 @@ exports.deleteCadFileOrPhotoByIndex = async (req, res) => {
       });
     }
 
-    const filesArray = cad[type];
-    if (!Array.isArray(filesArray) || index < 0 || index >= filesArray.length) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid index for deletion",
-      });
-    }
+    // Step 4: Count total files of that type across all documents
+    let totalFiles = cadDocs.reduce((sum, doc) => sum + (doc[type]?.length || 0), 0);
 
-    // Step 4: Prevent deletion if it would make the array empty
-    if (filesArray.length === 1) {
+    if (totalFiles <= 1) {
       return res.status(400).json({
         success: false,
         message: `Cannot delete the last remaining ${type}. At least one must remain.`,
       });
     }
 
-    // Step 5: Remove the file
-    const removedFile = filesArray.splice(index, 1);
+    // Step 5: Locate the document and remove the file at the given index
+    let currentIndex = 0;
+    for (const doc of cadDocs) {
+      const filesArray = doc[type];
+      if (index < currentIndex + filesArray.length) {
+        const relativeIndex = index - currentIndex;
+        const removedFile = filesArray.splice(relativeIndex, 1);
+        await doc.save();
 
-    // Step 6: Save updated CAD entry
-    await cad.save();
+        return res.status(200).json({
+          success: true,
+          message: `${type} at index ${index} deleted successfully`,
+          removed: removedFile[0],
+          updatedCad: doc,
+        });
+      }
+      currentIndex += filesArray.length;
+    }
 
-    return res.status(200).json({
-      success: true,
-      message: `${type} at index ${index} deleted successfully`,
-      removed: removedFile[0],
-      updatedCad: cad,
+    // If we reach here, index was out of bounds
+    return res.status(400).json({
+      success: false,
+      message: "Invalid index for deletion",
     });
 
   } catch (error) {

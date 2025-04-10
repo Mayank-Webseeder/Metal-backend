@@ -6,11 +6,11 @@ const cadSchema= new mongoose.Schema({
     },
     photo:[{
         type:String,
-        required:true,
+        
     }],
     CadFile:[{
         type:String,
-        required:true
+        
     }]
 },{timestamps:true})
 module.exports=mongoose.model("Cad",cadSchema);

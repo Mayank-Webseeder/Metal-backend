@@ -120,7 +120,7 @@ router.get('/file/download-all-type/:documentId', auth,  displayController.downl
 
 
 router.post("/grpahics/deleteCadFile",auth,graphicController.deleteCadFileOrPhotoByIndex);
-router.get("/display/getCadFilesAndPhoto",auth,displayController.getCadFilesByOrderAndAssignedUser);
+router.post("/display/getCadFilesAndPhoto",auth,displayController.getCadFilesByOrderAndAssignedUser);
 
 
 

@@ -69,7 +69,7 @@ exports.getOrders = async (req, res) => {
         .populate('assignedTo', 'firstName lastName email')
         .populate('approvedBy', 'name email')
         .populate('createdBy', 'name email')
-        .sort({ createdAt: -1 });
+        .sort({ updatedAt: -1,createdAt: -1 });
 
       // console.log("this is orders",orders);
       return res.status(200).json({
