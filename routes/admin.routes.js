@@ -104,18 +104,22 @@ router.post("/display/assignOrder/:orderId",auth,isAdmin, isSuperAdmin,displayCo
 
 
 
-// router.get('/file/download/:documentId/:fileIndex', auth,  graphicController.downloadCadFile);
 
-// // Add new route for downloading all files as ZIP
-// router.get('/file/download-all/:documentId', auth,  graphicController.downloadAllFiles);
+// Extra routes for download  graphics
+router.get('/file/download/:documentId/:fileIndex', auth,  displayController.downloadCadFile);
+// Add new route for downloading all files as ZIP
+router.get('/file/download-all/:documentId', auth,  displayController.downloadAllFiles);
+// Optional route for downloading all files of a specific type
+router.get('/file/download-all-type/:documentId', auth,  displayController.downloadAllFilesOfType);
 
-// // Optional route for downloading all files of a specific type
-// router.get('/file/download-all-type/:documentId', auth,  graphicController.downloadAllFilesOfType);
+
+
+
+
 
 
 
 router.post("/grpahics/deleteCadFile",auth,graphicController.deleteCadFileOrPhotoByIndex);
-
 router.get("/display/getCadFilesAndPhoto",auth,displayController.getCadFilesByOrderAndAssignedUser);
 
 

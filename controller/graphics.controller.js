@@ -805,6 +805,8 @@ exports.downloadCadFile = async (req, res) => {
 
 // New controller to download all files in a ZIP archive
 exports.downloadAllFiles = async (req, res) => {
+  console.log("this is download all files controller", req.params);
+  
   try {
     const { documentId } = req.params;
     
@@ -817,6 +819,8 @@ exports.downloadAllFiles = async (req, res) => {
     
     // Find the CAD document by ID
     const cadDocument = await Cad.findById(documentId);
+    console.log("this is download all files contr", req.cadDocument);
+    
     
     if (!cadDocument) {
       return res.status(404).json({
