@@ -29,6 +29,7 @@ const orderSchema = new mongoose.Schema({
       // "InGraphicsWorkQueue",
       // "InDisplayWorkQueue",
       "Completed",
+      "InAccountSection",
       "Billed",
       "Paid",
     ],

@@ -17,7 +17,13 @@ const financialTransactionSchema = new mongoose.Schema({
         type:mongoose.Types.ObjectId,
         ref:'User',
         required:true
-    }
+    },
+    // assignedTo:{
+    //     type:mongoose.Types.ObjectId,
+    //     ref:'User',
+    //     required:true
+
+    // }
 
 
 },{timeStamps:true});

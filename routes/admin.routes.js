@@ -36,7 +36,9 @@ const{
 const graphicController = require("../controller/graphics.controller");
 
 const displayController = require("../controller/display.controller");
-    // const {localFileUpload}= require("../config/cloudinary")
+
+const accountController = require("../controller/accounts.controller");
+  
     
 const{localFileUpload}= require("../utils/ImageUploader")
 
@@ -121,6 +123,13 @@ router.get('/file/download-all-type/:documentId', auth,  displayController.downl
 
 router.post("/grpahics/deleteCadFile",auth,graphicController.deleteCadFileOrPhotoByIndex);
 router.post("/display/getCadFilesAndPhoto",auth,displayController.getCadFilesByOrderAndAssignedUser);
+
+
+//accounts section routes
+router.post("/accounts/assignOrderToAccount/:orderId",auth,accountController.assignOrderToAccount);
+router.post("/accounts/createBill",auth,accountController.createBill);
+
+router.get("/accounts/getAssignedOrders",auth,accountController.getAssignedOrders);
 
 
 

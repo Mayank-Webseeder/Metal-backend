@@ -1,64 +1,289 @@
 const FinancialTransaction = require("../models/FinancialTransaction.model")
-const order = require("../models/order.model");
+const Order = require("../models/order.model");
+const User = require("../models/user.models");
+// Notification sending function
+// Update your sendAssignmentNotification function
+const socketManager = require('../middlewares/socketmanager.js');
 
-
-exports.CreateBill= async(req,res)=>{
+async function sendAssignmentNotification(req, order) {
     try {
-        const {orderId}=req.body;
-        
-        if(!order){
-            return res.status(400).json({
-                success:false,
-                message:"all fields are mandatory",
-            })
-        }
-
-        const Order= await order.findById(orderId);
-        if(!Order){
-            return res.status(404).json({
-                success:false,
-                message:"order not found"
-            })
-        }
-
-        if(Order.status!=='Completed' && Order.status!=='Billed'){
-            return res.status(400).json({
-                success:false,
-                message:"cannot crete bill for an order that is not completed"
-            })
-        }
-
-        Order.status="Billed"
-
-        const newBill = new FinancialTransaction({
-            orderId,
-            status:"Billed",
-            processedBy:req.user._id
-
-        })
-        
-        const savedBill =await newBill.save();
-
-        const populatedBill = await FinancialTransaction.findById(savedBill._id).populate("orderId");
-
-
-        return res.status(200).json({
-            success:true,
-            message:"billed successfully",
-            savedBill:populatedBill,
-        })
-
-        
+      console.log(`Sending notification for order ${order._id}`);
+      const io = req.app.get("io");
+      
+      if (!io) {
+        console.error("IO instance not found");
+        return;
+      }
+      
+      // Get the socket ID for the assigned user
+      const assignedUserSocketId = socketManager.getUserSocket(order.assignedTo.toString());
+      
+      if (assignedUserSocketId) {
+        console.log(`Emitting to socket: ${assignedUserSocketId}`);
+        io.to(assignedUserSocketId).emit("assignment", {
+          orderId: order._id,
+          message: `Order ${order.orderId} has been assigned to you`
+        });
+        console.log(`Notification sent for order ${order._id}`);
+      } else {
+        console.log(`User ${order.assignedTo} is not connected`);
+      }
     } catch (error) {
-        console.log("error in creating the bill",error);
-        return res.status(400).json({
-            success:false,
-            message:"problem in creatiing the bill",
-            error:message.error
-        })
-        
+      console.error("Error sending notification:", error);
     }
-}
+  }
+
+
+exports.assignOrderToAccount = async (req, res) => {
+    try {
+      const { orderId } = req.params;
+      const { accountUserId } = req.body;
+      
+  
+      if (!orderId || !accountUserId) {
+        throw new Error("Order ID and Account User ID are required");
+      }
+  
+      const order = await Order.findOne({
+        $or: [{ _id: orderId }, { orderId }]
+      });
+  
+      if (!order) throw new Error("Order not found");
+      console.log("order is:",order);
+  
+      const accountUser = await User.findById(accountUserId);
+      if (!accountUser) throw new Error("Account user not found");
+  
+      // Check if order is in a valid state to be assigned to accounting
+      if (order.status !== "Completed" && order.status !== "Billed" && order.status !== "ReadyForBilling") {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot assign to accounting for an order that is not completed or ready for billing"
+        });
+      }
+  
+      const previousAssignedTo = order.assignedTo;
+      console.log("previousAssignedTo:", previousAssignedTo);
+      
+      order.assignedTo = accountUserId;
+      order.status = "InAccountSection";
+      await order.save();
+  
+    
+  
+      const populatedOrder = await Order.findById(order._id)
+        // .populate("customer", "name email")
+        .populate({
+            path: "customer",
+            
+          })
+        .populate("assignedTo", "name email");
+      
+      // Send notification about the assignment
+      sendAssignmentNotification(req, order);
+  
+      return res.status(200).json({
+        success: true,
+        message: "Order successfully assigned to accounting user",
+        data: {
+          order: populatedOrder,
+        //   financialRecord
+        }
+      });
+  
+    } catch (error) {
+      console.error("Error assigning order to accounting:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Order assignment to accounting failed",
+        error: error.message
+      });
+    }
+  };
+
+
+  // exports.getAssignedOrders = async (req, res) => {
+  //     try {
+  //       console.log("asssigned order is hitted");
+  //         const userId = req.user.id; // Assuming authenticated user
+  //         console.log("user id is:",userId);
+  
+  //         const assignedOrders = await Order.find({ 
+  //             assignedTo: userId,
+  //             status: { $nin: ['completed', 'paid'] }
+  //         })
+
+  //         console.log("asssigned orders is:",assignedOrders);
+  //         const populatedOrder = await Order.findById(assignedOrders._id)
+  //       // .populate("customer", "name email")
+  //       .populate({
+  //           path: "customer",
+  //           populate: {
+  //             path: "address"
+  //           }
+  //         })
+  //         .populate("assignedTo", "name email")
+  //         .populate('createdBy', 'name email')
+  //         .sort({ createdAt: -1 });
+  
+  //         console.log("assignedOrders is",assignedOrders);
+  //         console.log("populatedOrder is ",populatedOrder);
+  
+  //         // const filteredOrders = assignedOrders.map(({customer,createdBy,assignedTo,...rest})=>rest);
+  
+  //         const filteredOrders = assignedOrders.map(order => {
+  //             const obj = order.toObject();  // Convert Mongoose document to a plain object
+  //             const {  createdBy, assignedTo, ...rest } = obj;
+  //             return rest;
+  //         });
+          
+  //         console.log("fileredOrders is:",filteredOrders);
+  
+  //         res.status(200).json({
+  //             success: true,
+  //             count: assignedOrders.length,
+  //             data: filteredOrders
+  //             });
+         
+  //     } catch (error) {
+  //         console.error('Error fetching assigned orders', error);
+  //         res.status(500).json({
+  //             success: false,
+  //             message: 'Failed to fetch assigned orders',
+  //             error: error.message
+  //         });
+  //     }
+  // };
+
+  exports.getAssignedOrders = async (req, res) => {
+    try {
+      console.log("Assigned order endpoint hit");
+      const userId = req.user.id;
+  
+      const populatedOrders = await Order.find({ 
+        assignedTo: userId,
+        status: { $nin: ['completed', 'paid'] }
+      })
+      .populate({
+        path: "customer",
+        populate: {
+          path: "address"
+        }
+      })
+      .populate("assignedTo", "name email")
+      .populate("createdBy", "name email")
+      .sort({ createdAt: -1 });
+  
+      console.log("Populated orders:", populatedOrders);
+  
+      res.status(200).json({
+        success: true,
+        count: populatedOrders.length,
+        data: populatedOrders
+      });
+  
+    } catch (error) {
+      console.error("Error fetching assigned orders", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch assigned orders",
+        error: error.message
+      });
+    }
+  };
+  
+
+
+  
+  exports.createBill = async (req, res) => {
+    try {
+      const { orderId } = req.body;
+      
+      if (!orderId) {
+        return res.status(400).json({
+          success: false,
+          message: "Order ID is mandatory",
+        });
+      }
+      
+      const order = await Order.findById(orderId);
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+      
+      if (order.status !== 'Completed' && order.status !== 'InAccountSection') {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot create bill for an order that is not completed or ready for billing"
+        });
+      }
+      
+      order.status = "Billed";
+      await order.save();
+      
+      // Find existing financial transaction or create new one
+      let financialTransaction = await FinancialTransaction.findOne({ orderId: order._id });
+      
+      if (financialTransaction) {
+        financialTransaction.status = "Billed";
+        financialTransaction.billedAt = new Date();
+        financialTransaction.processedBy = req.user._id;
+      } else {
+        financialTransaction = new FinancialTransaction({
+          orderId: order._id,
+          status: "Billed",
+          processedBy: req.user._id,
+          billedAt: new Date()
+        });
+      }
+      
+      const savedBill = await financialTransaction.save();
+      
+      const populatedBill = await FinancialTransaction.findById(savedBill._id)
+        .populate("orderId")
+        .populate({
+          path: "orderId",
+          populate: {
+            path: "customer",
+            select: "name email"
+          }
+        });
+        
+      // Send billing notification
+      sendBillingNotification(req, order);
+      
+      return res.status(200).json({
+        success: true,
+        message: "Billed successfully",
+        data: {
+          bill: populatedBill
+        }
+      });
+      
+    } catch (error) {
+      console.error("Error in creating the bill:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Problem in creating the bill",
+        error: error.message
+      });
+    }
+  };
+
+
+  
+  
+
+  
+  // Helper function for sending billing notifications
+  const sendBillingNotification = (req, order) => {
+    // Implementation for sending notifications about billing
+    console.log(`Billing notification for order ${order._id}`);
+    // Additional notification logic here
+  };
 
 const updateBill = async(req,res)=>{
     try {
