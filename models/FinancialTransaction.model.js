@@ -6,6 +6,7 @@ const financialTransactionSchema = new mongoose.Schema({
         required:true
     },
     
+    
     status:{
         type:String,
         enum:["Completed","Pending","Billed"],
@@ -26,7 +27,7 @@ const financialTransactionSchema = new mongoose.Schema({
     // }
 
 
-},{timeStamps:true});
+},{timestamps:true});
 
 financialTransactionSchema.pre("save",function(next) {
     //auto generate invoice number if not already set
