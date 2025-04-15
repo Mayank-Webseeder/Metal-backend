@@ -1,8 +1,15 @@
 const mongoose= require("mongoose");
 const leadSchema= new mongoose.Schema({
-    name:{
-        type:String,
-        required:true,
+    firstName: { 
+        type: String, 
+        required: true 
+    },
+    lastName: { 
+        type: String, 
+        required: true 
+    },
+    name: { 
+        type: String 
     },
     email:{
         type:String,
@@ -25,9 +32,11 @@ const leadSchema= new mongoose.Schema({
         type:String
     }
 
-    
-
-
 },{timestamps:true});
+
+leadSchema.pre("save", function (next) {
+    this.name = `${this.firstName} ${this.lastName}`.trim();
+    next();
+});
 
 module.exports= mongoose.model("Lead",leadSchema);

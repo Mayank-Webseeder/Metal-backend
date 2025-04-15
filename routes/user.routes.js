@@ -12,4 +12,6 @@ router.post("/change-password", auth, userController.changePassword);
 router.get("/getAllUsers", auth, getAllUsers);
 router.delete("/deleteUser/:userId", auth, isSuperAdmin, userController.deleteUser);
 
+router.put("/updateUser/:userId", auth, userController.updateUser);
+
 module.exports= router;

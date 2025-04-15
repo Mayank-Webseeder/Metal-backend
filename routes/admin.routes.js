@@ -12,7 +12,8 @@ const {
     createLead,
     updateLead,
     deleteLead,
-    convertToCustomer
+    convertToCustomer,
+    getAllLeads
     }= require('../controller/lead.controller');
 
 const{ createCustomer, updateCustomer, deleteCustomer,
@@ -48,6 +49,7 @@ router.post("/createLead",auth,isAdmin,createLead);
 router.put("/updateLead/:id",auth,isAdmin,updateLead);
 router.delete("/deleteLead/:id",auth,isAdmin,deleteLead);
 router.post("/convertToCustomer/:id",auth,isAdmin,convertToCustomer);
+router.get("/getAllLeads", auth, isAdmin, getAllLeads);
 
 //create customer route
 router.post("/createCustomer",auth,isAdmin,createCustomer);
