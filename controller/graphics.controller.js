@@ -8,7 +8,7 @@ const User = require('../models/user.models');
 const { localFileUpload } = require("../utils/ImageUploader");
 const Agenda = require('agenda');
 const dotenv= require("dotenv");
-const moment = require('moment-timeZone'); // To format date & time
+const moment = require('moment-timezone'); // To format date & time
 dotenv.config();
 const {getSockets}=require("../lib/helper.js");
 

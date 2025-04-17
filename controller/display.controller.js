@@ -14,7 +14,7 @@ const fs = require('fs');
 const { localFileUpload } = require("../utils/ImageUploader");
 const Agenda = require('agenda');
 const dotenv= require("dotenv");
-const moment = require('moment-timeZone'); // To format date & time
+const moment = require('moment-timezone'); 
 dotenv.config();
 const {getSockets}=require("../lib/helper.js");
 const Log= require("../models/log.model");
