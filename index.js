@@ -11,15 +11,29 @@ const { createServer } = require("http");
 const { socketAuthenticator } = require("./middlewares/auth.js");
 const socketManager = require("./middlewares/socketmanager.js"); 
 
+
+
+
+
+
 dotenv.config();
 const PORT = process.env.PORT || 3000;
+// const corsOptions = {
+//   origin: [
+//     process.env.CLIENT_URL,
+//   ],
+//   methods: ["GET", "POST", "PUT", "DELETE"],
+//   credentials: true,
+// };
+
 const corsOptions = {
-  origin: [
-    process.env.CLIENT_URL,
-  ],
+  origin: function (origin, callback) {
+    callback(null, origin); // reflect the origin in response
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 };
+
 
 const server = createServer(app);
 const io = new Server(server, {

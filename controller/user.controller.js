@@ -44,7 +44,7 @@ exports.signUp = async (req, res) => {
         })
 
     } catch (error) {
-        console.log("problem in user signup");
+        
         return res.status(500).json({
             success: false,
             message: "user cannot be registered, please try again",
@@ -70,7 +70,7 @@ const transporter = nodemailer.createTransport({
 
 const sendEmail = async (email, password, name) => {
     try {
-        console.log("this is", email, password, name,);
+        
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
@@ -247,7 +247,7 @@ exports.login = async (req, res) => {
 exports.getUser = async (req, res) => {
     try {
         const userInfo = req.user;
-        console.log("userInfo is:", userInfo)
+        
         const email = req.user.email;
         const accountType = req.user.accountType;
         const firstName = req.user.firstName;
@@ -352,6 +352,25 @@ exports.getAllUsers = async (req, res) => {
         });
     }
 };
+
+exports. getAllAdmin= async()=> {
+    try {
+        // Fetch all users from database
+        // Exclude password field from the response
+        const users = await userModel.find({ 
+            accountType: { $in: ["Admin", "SuperAdmin"] } 
+        });
+        
+       
+        return users;
+
+    } catch (error) {
+        console.error("Error fetching users:", error);
+    }
+}
+
+
+
 
 
 exports.deleteUser = async (req, res) => {

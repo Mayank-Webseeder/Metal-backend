@@ -3,23 +3,23 @@ const userModel = require("../models/user.models.js");
 
 const socketAuthenticator = async (socket, next) => {
   try {
-    console.log("Socket authentication starting");
+    
     const authToken = socket.handshake.auth.token;
     
     if (!authToken) {
-      console.log("No auth token provided");
+      
       return next(new Error("Please login to access this route"));
     }
 
     try {
-      console.log("Verifying token");
+      
       const decodedData = jwt.verify(authToken, process.env.JWT_SECRET);
       
       // Important: Your token has "id" not "_id"
       const userId = decodedData.id; // Change from _id to id
       
       if (!userId) {
-        console.log("No user ID in token");
+        
         return next(new Error("Invalid token format"));
       }
       

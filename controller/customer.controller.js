@@ -59,7 +59,7 @@ exports.createCustomer= async(req,res)=>{
             savedAddress = await newAddress.save();
         }
 
-        console.log("savedAddress is:",savedAddress);
+       
         
         const newCustomer = new Customer({
             firstName,
@@ -241,14 +241,14 @@ exports.updateCustomer = async (req, res) => {
         if (email) existingCustomer.email = email.trim();
         if (phoneNo) existingCustomer.phoneNo = phoneNo;
 
-        console.log("Updated customer data before saving:", existingCustomer);
+       
 
         // Save the updated customer (this triggers the pre-save hook)
         await existingCustomer.save();
 
         // Update the address if provided
         if (address) {
-            console.log("inside address field");
+            
             const existingAddress = await Address.findById(existingCustomer.address);
             if (!existingAddress) {
                 return res.status(404).json({
@@ -317,11 +317,11 @@ exports.deleteCustomer = async(req,res)=>{
 
         if(customer.address){
             const address = await Address.findById(customer.address);
-            console.log("address is:",address);
+            
 
             if(address){
                 await address.deleteOne();
-                console.log("Address deleted successfully:",address);
+                
             }
 
         }

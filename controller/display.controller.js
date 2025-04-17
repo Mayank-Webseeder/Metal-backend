@@ -17,6 +17,7 @@ const dotenv= require("dotenv");
 const moment = require('moment-timeZone'); // To format date & time
 dotenv.config();
 const {getSockets}=require("../lib/helper.js");
+const Log= require("../models/log.model");
 
 async function sendAssignmentNotification(req, order) {
     try {
@@ -50,6 +51,8 @@ exports.assignOrderToDisplay = async (req, res) => {
     try {
       const { orderId } = req.params;
       const { displayUserId } = req.body;
+
+      const changes = [];
   
       if (!orderId || !displayUserId) {
         throw new Error("Order ID and Display User ID are required");
@@ -64,11 +67,18 @@ exports.assignOrderToDisplay = async (req, res) => {
       const displayUser = await User.findById(displayUserId);
       if (!displayUser) throw new Error("Display user not found");
   
-      const previousAssignedTo = order.assignedTo;
-      console.log("previousAssignedTo")
+      
+      const user1 = await User.findById(order.assignedTo);
+      const user2 = await User.findById(displayUser);
+      changes.push(
+        `Assigned to changed from ${user1.name} role:${user1.accountType} to ${user2.name} role:${user2.accountType}`
+      );
+      
+      
       order.assignedTo = displayUserId;
       if (order.status !== "InWorkQueue") order.status = "InWorkQueue";
       await order.save();
+      
   
       const populatedOrder = await Order.findById(order._id)
         .populate("customer", "name email")

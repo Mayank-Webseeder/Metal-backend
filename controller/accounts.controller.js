@@ -43,13 +43,15 @@ exports.assignOrderToAccount = async (req, res) => {
       if (!orderId || !accountUserId) {
         throw new Error("Order ID and Account User ID are required");
       }
+        let changes=[];
+
+            
   
       const order = await Order.findOne({
         $or: [{ _id: orderId }, { orderId }]
       });
   
       if (!order) throw new Error("Order not found");
-      console.log("order is:",order);
   
       const accountUser = await User.findById(accountUserId);
       if (!accountUser) throw new Error("Account user not found");
@@ -64,9 +66,16 @@ exports.assignOrderToAccount = async (req, res) => {
   
       const previousAssignedTo = order.assignedTo;
       console.log("previousAssignedTo:", previousAssignedTo);
+
+            const user1 = await User.findById(order.assignedTo);
+            
       
       order.assignedTo = accountUserId;
       order.status = "InAccountSection";
+      const user2 = await User.findById(order.assignedTo);
+            changes.push(
+              `Assigned to changed from ${user1.name} role:${user1.accountType} to ${user2.name} role:${user2.accountType}`
+            );
       await order.save();
   
     
@@ -157,7 +166,7 @@ exports.assignOrderToAccount = async (req, res) => {
 
   exports.getAssignedOrders = async (req, res) => {
     try {
-      console.log("Assigned order endpoint hit");
+      
       const userId = req.user.id;
   
       const populatedOrders = await Order.find({ 

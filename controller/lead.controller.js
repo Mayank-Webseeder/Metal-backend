@@ -229,7 +229,7 @@ exports.createLead= async(req,res)=>{
         //save the new lead to the database
         const savedLead= await newLead.save();
         const verifyLead = await Lead.findOne({ email });
-        console.log('Verified lead from DB:', verifyLead);
+        
 
         //return success response
         return res.status(201).json({

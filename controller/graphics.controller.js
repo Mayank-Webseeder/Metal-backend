@@ -14,6 +14,8 @@ const {getSockets}=require("../lib/helper.js");
 
 const agenda = new Agenda({ db: { address: process.env.MONGODB_URL } });
 
+const {changeStatus} =require("../service/websocketStatus");
+
 exports.graphicsController= async(req,res)=>{
     console.log("this is route for graphics controller")
 }
@@ -366,7 +368,7 @@ exports.getUserAssignedOrders = async (req, res) => {
         .populate('createdBy', 'name email')
         .sort({ createdAt: -1 });
 
-        console.log("assignedOrders is",assignedOrders);
+        
 
         // const filteredOrders = assignedOrders.map(({customer,createdBy,assignedTo,...rest})=>rest);
 
@@ -376,7 +378,7 @@ exports.getUserAssignedOrders = async (req, res) => {
             return rest;
         });
         
-        console.log("fileredOrders is:",filteredOrders);
+       
 
         res.status(200).json({
             success: true,
@@ -506,13 +508,14 @@ process.on('SIGINT', gracefulShutdown);
 const allowedStatuses = ["Pending", "InProgress", "Completed", "Failed", "Paused"];
 
 exports.updateWorkQueueStatus = async (req, res) => {
+
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
         // Destructure workQueueId and new status from the request body
         const { workQueueId, status } = req.body;
-        console.log("status is:",status);
+       
         
 
         // Validate that both workQueueId and status are provided
@@ -560,10 +563,13 @@ exports.updateWorkQueueStatus = async (req, res) => {
 
 
         const updatedWorkQueueItem = await workQueueItem.save({ session });
+        
 
         // Commit the transaction
         await session.commitTransaction();
         session.endSession();
+        
+        changeStatus(req,workQueueItem);
 
         res.status(200).json({
             success: true,
@@ -672,8 +678,7 @@ const archiver = require('archiver'); // You'll need to install this package
 exports.downloadCadFile = async (req, res) => {
   try {
     const { documentId, fileIndex } = req.params;
-    console.log("documentId is:",documentId);
-    console.log("file index is:",fileIndex);
+   
     
     if (!documentId) {
       return res.status(400).json({
@@ -1192,9 +1197,7 @@ exports.deleteCadFileOrPhotoByIndex = async (req, res) => {
     const { orderId, type, index } = req.body; // type = 'photo' or 'CadFile'
     const userId = req.user.id;
 
-    console.log("orderId is:", orderId);
-    console.log("type is:", type);
-    console.log("index is:", index);
+    
 
     // Step 1: Validate order and user
     const order = await Order.findOne({

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Counter = require("../models/counter");
+const Log = require("./log.model");
 
 const orderSchema = new mongoose.Schema({
   orderId: {
@@ -62,7 +63,7 @@ const orderSchema = new mongoose.Schema({
   },
 }, { timestamps: true }); // ✅ Corrected spelling
 
-// ✅ Pre-save hook to auto-generate orderId
+// // ✅ Pre-save hook to auto-generate orderId
 orderSchema.pre("save", async function (next) {
   if (this.isNew) {
     try {
@@ -81,5 +82,10 @@ orderSchema.pre("save", async function (next) {
     next();
   }
 });
+
+
+
+
+
 
 module.exports = mongoose.model("Order", orderSchema);

@@ -8,6 +8,7 @@ const upload = multer({ storage });
 const {auth, isAdmin ,isGraphics, isSuperAdmin, isDisplay, isGraphicsDisplay, isDisplayAndAdmin} = require("../middleware/auth");
 
 const {adminController}= require("../controller/admin.controller");
+const logController = require("../controller/log.controller");
 const {
     createLead,
     updateLead,
@@ -133,6 +134,9 @@ router.post("/accounts/createBill",auth,accountController.createBill);
 
 router.get("/accounts/getAssignedOrders",auth,accountController.getAssignedOrders);
 
+
+//getting log routes
+router.get("/getAllLog/:orderId",auth,logController.getAllLog)
 
 
 

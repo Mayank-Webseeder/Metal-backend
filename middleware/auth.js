@@ -7,7 +7,7 @@ const user = require("../models/user.models");
 const auth= async(req,res,next)=>{ 
     try {
         const token = req.cookies.token || req.header.token || req.header("Authorization");
-        console.log("token is:",token);
+        
 
         //if token missing then return error 
         if(!token){
@@ -16,12 +16,12 @@ const auth= async(req,res,next)=>{
                 message:"token is missing"
             })
         }
-        console.log("token is:",token);
+        
 
         //decoding token
         try {
             const decode = jwt.verify(token,process.env.JWT_SECRET);
-            console.log("decoded token is:",decode);
+            0
             req.user=decode
             
         } catch (error) {
@@ -91,7 +91,7 @@ const isSuperAdmin = async(req,res,next)=>{
 
 const isAccount = async(req,res,next)=>{
     try {
-        console.log("account role middleware check krne aa rhe h");
+        
         if(req.user.accountType!=="Accounts"){
             return res.status(400).json({
                 success:false,
