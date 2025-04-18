@@ -128,9 +128,10 @@ exports.createAccount = async (req, res) => {
                 message: "Only SuperAdmin can create new accounts"
             });
         }
+        
 
         // Allowed account types
-        const allowedAccountTypes = ["Admin", "Graphics", "Accounts", "Display"];
+        const allowedAccountTypes = ["Admin", "Graphics", "Accounts", "Display","Viewer"];
         if (!allowedAccountTypes.includes(accountType)) {
             return res.status(400).json({
                 success: false,
@@ -279,56 +280,6 @@ exports.getUser = async (req, res) => {
     }
 }
 
-// exports.changePassword = async (req, res) => {
-//     try {
-//         const { oldPassword, newPassword } = req.body;
-//         const userId = req.user.id;
-
-//         // Check if both old and new passwords are provided
-//         if (!oldPassword || !newPassword) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Both old and new passwords are required.",
-//             });
-//         }
-
-//         // Fetch the user from the database
-//         const user = await userModel.findById(userId);
-//         if (!user) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "User not found.",
-//             });
-//         }
-
-//         // Compare old password
-//         const isMatch = await bcrypt.compare(oldPassword, user.password);
-//         if (!isMatch) {
-//             return res.status(401).json({
-//                 success: false,
-//                 message: "Old password is incorrect.",
-//             });
-//         }
-
-//         // Hash new password and update
-//         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-//         user.password = hashedNewPassword;
-//         await user.save();
-
-//         return res.status(200).json({
-//             success: true,
-//             message: "Password updated successfully.",
-//         });
-
-//     } catch (error) {
-//         console.error("Error changing password:", error);
-//         return res.status(500).json({
-//             success: false,
-//             message: "Something went wrong. Please try again.",
-//             error: error.message,
-//         });
-//     }
-// };
 
 exports.getAllUsers = async (req, res) => {
     try {

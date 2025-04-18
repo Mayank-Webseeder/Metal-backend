@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const financialTransactionSchema = new mongoose.Schema({
-    order:{
+    orderId:{
         type:mongoose.Types.ObjectId,
         ref:"Order",
         required:true

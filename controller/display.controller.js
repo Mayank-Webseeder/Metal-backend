@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+
 const Order = require("../models/order.model");
 const WorkQueue = require("../models/workQueueItem.model");
 const User = require("../models/user.models");
@@ -18,6 +18,7 @@ const moment = require('moment-timezone');
 dotenv.config();
 const {getSockets}=require("../lib/helper.js");
 const Log= require("../models/log.model");
+const {changeStatusByDisplay} = require("../service/websocketStatus")
 
 async function sendAssignmentNotification(req, order) {
     try {
@@ -73,11 +74,23 @@ exports.assignOrderToDisplay = async (req, res) => {
       changes.push(
         `Assigned to changed from ${user1.name} role:${user1.accountType} to ${user2.name} role:${user2.accountType}`
       );
+
+      console.log("changes is:",changes);
       
       
       order.assignedTo = displayUserId;
       if (order.status !== "InWorkQueue") order.status = "InWorkQueue";
       await order.save();
+      console.log("order is,",order);
+
+        if (changes.length > 0) {
+            for (const change of changes) {
+              await Log.create({
+                orderId: order._id,
+                changes: change,
+              });
+            }
+          }
       
   
       const populatedOrder = await Order.findById(order._id)
@@ -103,6 +116,39 @@ exports.assignOrderToDisplay = async (req, res) => {
       });
     }
   };
+
+exports.changeStatus= async(req,res)=>{
+    try {
+      const {orderId,status}= req.body;
+      
+      const order = await Order.findOne({_id:orderId});
+     
+      if(!order){
+        return res.status(404).json({
+          success:false,
+          message:"order not found"
+        })
+      }
+      order.status= status;
+      await order.save();
+      changeStatusByDisplay(req,order);
+      
+      return res.status(200).json({
+        success:true,
+        message:"order has been updated successfully"
+      })
+
+
+      
+    } catch (error) {
+      console.log("error",error);
+      return res.status(400).json({
+        success:false,
+        message:error.message
+      })
+      
+    }
+  }
   
   
 
@@ -542,8 +588,6 @@ exports.getFilesByOrder = async (req, res) => {
     });
   }
 };
-
-
   
   
   

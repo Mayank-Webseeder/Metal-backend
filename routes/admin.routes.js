@@ -105,6 +105,7 @@ router.get('/file/order/:orderId', auth, isDisplay, graphicController.getFilesBy
 
 //display routes
 router.post("/display/assignOrder/:orderId",auth,isAdmin, isSuperAdmin,displayController.assignOrderToDisplay);
+router.post("/display/changeStatus",auth,displayController.changeStatus);
 
 
 

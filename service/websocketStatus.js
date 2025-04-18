@@ -36,6 +36,42 @@ exports.changeStatus=async(req, workQueueItem)=> {
   }
 }
 
+exports.changeStatusByDisplay=async(req,order)=> {
+  try {
+    
+    // Get admin users
+    const adminUsers = await getAllAdmin(); // Make sure this returns an array of user objects
+    
+
+    // Extract all user IDs (admin + assignedTo)
+    const userIds = new Set(
+      adminUsers.map((admin) => admin._id.toString())
+    );
+    userIds.add(order.assignedTo.toString()); // Add assigned user
+
+    const io = req.app.get("io");
+    if (!io) {
+      console.error("IO instance not found");
+      return;
+    }
+
+    for (const userId of userIds) {
+      const socketId = socketManager.getUserSocket(userId);
+      if (socketId) {
+        console.log(`Emitting to socket: ${socketId}`);
+        io.to(socketId).emit("changeStatus", {
+          orderId: order._id,
+          status: order.status,
+        });
+      } else {
+        console.log(`error sending websocket`);
+      }
+    }
+  } catch (error) {
+    console.error("Error sending notification:", error);
+  }
+}
+
 
 exports.notifyOrderUpdated = async(req, order, changedFields) => {
   try {

@@ -4,6 +4,9 @@ const User = require("../models/user.models");
 // Notification sending function
 // Update your sendAssignmentNotification function
 const socketManager = require('../middlewares/socketmanager.js');
+const{changeStatusByDisplay} = require("../service/websocketStatus");
+
+const Log= require("../models/log.model");
 
 async function sendAssignmentNotification(req, order) {
     try {
@@ -38,12 +41,13 @@ exports.assignOrderToAccount = async (req, res) => {
     try {
       const { orderId } = req.params;
       const { accountUserId } = req.body;
+      const changes = [];
       
   
       if (!orderId || !accountUserId) {
         throw new Error("Order ID and Account User ID are required");
       }
-        let changes=[];
+       
 
             
   
@@ -67,7 +71,7 @@ exports.assignOrderToAccount = async (req, res) => {
       const previousAssignedTo = order.assignedTo;
       console.log("previousAssignedTo:", previousAssignedTo);
 
-            const user1 = await User.findById(order.assignedTo);
+      const user1 = await User.findById(order.assignedTo);
             
       
       order.assignedTo = accountUserId;
@@ -77,6 +81,14 @@ exports.assignOrderToAccount = async (req, res) => {
               `Assigned to changed from ${user1.name} role:${user1.accountType} to ${user2.name} role:${user2.accountType}`
             );
       await order.save();
+      if (changes.length > 0) {
+                  for (const change of changes) {
+                    await Log.create({
+                      orderId: order._id,
+                      changes: change,
+                    });
+                  }
+                }
   
     
   
@@ -111,59 +123,7 @@ exports.assignOrderToAccount = async (req, res) => {
   };
 
 
-  // exports.getAssignedOrders = async (req, res) => {
-  //     try {
-  //       console.log("asssigned order is hitted");
-  //         const userId = req.user.id; // Assuming authenticated user
-  //         console.log("user id is:",userId);
-  
-  //         const assignedOrders = await Order.find({ 
-  //             assignedTo: userId,
-  //             status: { $nin: ['completed', 'paid'] }
-  //         })
-
-  //         console.log("asssigned orders is:",assignedOrders);
-  //         const populatedOrder = await Order.findById(assignedOrders._id)
-  //       // .populate("customer", "name email")
-  //       .populate({
-  //           path: "customer",
-  //           populate: {
-  //             path: "address"
-  //           }
-  //         })
-  //         .populate("assignedTo", "name email")
-  //         .populate('createdBy', 'name email')
-  //         .sort({ createdAt: -1 });
-  
-  //         console.log("assignedOrders is",assignedOrders);
-  //         console.log("populatedOrder is ",populatedOrder);
-  
-  //         // const filteredOrders = assignedOrders.map(({customer,createdBy,assignedTo,...rest})=>rest);
-  
-  //         const filteredOrders = assignedOrders.map(order => {
-  //             const obj = order.toObject();  // Convert Mongoose document to a plain object
-  //             const {  createdBy, assignedTo, ...rest } = obj;
-  //             return rest;
-  //         });
-          
-  //         console.log("fileredOrders is:",filteredOrders);
-  
-  //         res.status(200).json({
-  //             success: true,
-  //             count: assignedOrders.length,
-  //             data: filteredOrders
-  //             });
-         
-  //     } catch (error) {
-  //         console.error('Error fetching assigned orders', error);
-  //         res.status(500).json({
-  //             success: false,
-  //             message: 'Failed to fetch assigned orders',
-  //             error: error.message
-  //         });
-  //     }
-  // };
-
+ 
   exports.getAssignedOrders = async (req, res) => {
     try {
       
@@ -183,7 +143,7 @@ exports.assignOrderToAccount = async (req, res) => {
       .populate("createdBy", "name email")
       .sort({ createdAt: -1 });
   
-      console.log("Populated orders:", populatedOrders);
+      
   
       res.status(200).json({
         success: true,
@@ -207,6 +167,7 @@ exports.assignOrderToAccount = async (req, res) => {
   exports.createBill = async (req, res) => {
     try {
       const { orderId } = req.body;
+      let changes = [];
       
       if (!orderId) {
         return res.status(400).json({
@@ -230,21 +191,23 @@ exports.assignOrderToAccount = async (req, res) => {
         });
       }
       
-      order.status = "Billed";
-      await order.save();
+     
       
       // Find existing financial transaction or create new one
-      let financialTransaction = await FinancialTransaction.findOne({ orderId: order._id });
+      let financialTransaction = await FinancialTransaction.findOne({ orderId });
+      console.log("financial transaction is :",financialTransaction);
       
       if (financialTransaction) {
         financialTransaction.status = "Billed";
         financialTransaction.billedAt = new Date();
-        financialTransaction.processedBy = req.user._id;
+        financialTransaction.processedBy = req.user.id;
+       
       } else {
+        console.log("order id is",orderId)
         financialTransaction = new FinancialTransaction({
-          orderId: order._id,
+          orderId: orderId,
           status: "Billed",
-          processedBy: req.user._id,
+          processedBy: req.user.id,
           billedAt: new Date()
         });
       }
@@ -263,6 +226,21 @@ exports.assignOrderToAccount = async (req, res) => {
         
       // Send billing notification
       sendBillingNotification(req, order);
+      const previousStatus=order.status;
+      console.log("previous status is:",previousStatus);
+      order.status = "Billed";
+      changes.push(`Status changed from "${previousStatus}" to "${order.status}"`);
+      await order.save();
+      changeStatusByDisplay(req,order);
+
+      if (changes.length > 0) {
+        for (const change of changes) {
+          await Log.create({
+            orderId: orderId,
+            changes: change,
+          });
+        }
+      }
       
       return res.status(200).json({
         success: true,
