@@ -198,6 +198,13 @@ exports.login = async (req, res) => {
             });
         }
 
+        if (!user.isActive) {
+            return res.status(403).json({
+                success: false,
+                message: "Account is inactive. Please contact admin."
+            });
+        }
+
         //generate jwt token 
         if (await bcrypt.compare(password, user.password)) {
             const payload = {
@@ -437,7 +444,7 @@ exports.deleteUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
     try {
         const { userId } = req.params;
-        const { firstName, lastName, accountType } = req.body;
+        const { firstName, lastName, accountType ,  isActive} = req.body;
 
         // Validate input data
         if (!userId) {
@@ -517,6 +524,10 @@ exports.updateUser = async (req, res) => {
         if (!(userToUpdate.accountType === "SuperAdmin" && accountType !== "SuperAdmin")) {
             userToUpdate.accountType = accountType;
         }
+
+        if (typeof isActive === "boolean") {
+            userToUpdate.isActive = isActive;
+        }
         
         await userToUpdate.save();
 
@@ -528,7 +539,8 @@ exports.updateUser = async (req, res) => {
                 firstName: userToUpdate.firstName,
                 lastName: userToUpdate.lastName,
                 email: userToUpdate.email,
-                accountType: userToUpdate.accountType
+                accountType: userToUpdate.accountType,
+                isActive: userToUpdate.isActive
             }
         });
 
