@@ -15,6 +15,7 @@ const {getSockets}=require("../lib/helper.js");
 const agenda = new Agenda({ db: { address: process.env.MONGODB_URL } });
 
 const {changeStatus} =require("../service/websocketStatus");
+const notification = require("../models/notification.model");
 
 exports.graphicsController= async(req,res)=>{
     console.log("this is route for graphics controller")
@@ -71,6 +72,17 @@ const socketManager = require('../middlewares/socketmanager.js');
 
 async function sendAssignmentNotification(req, order) {
     try {
+
+      const assignedUserId = order.assignedTo ? order.assignedTo._id.toString() : null;
+
+      if (!assignedUserId) {
+        console.log("No assigned user to notify");
+        return;
+      }
+
+      const userIdArray =  [assignedUserId];
+
+
       console.log(`Sending notification for order ${order._id}`);
       const io = req.app.get("io");
       
@@ -78,6 +90,8 @@ async function sendAssignmentNotification(req, order) {
         console.error("IO instance not found");
         return;
       }
+
+      await notification.create({text:`Order ${order.orderId} has been assigned to you`,userId:userIdArray})
       
       // Get the socket ID for the assigned user
       const assignedUserSocketId = socketManager.getUserSocket(order.assignedTo.toString());

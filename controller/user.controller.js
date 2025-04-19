@@ -316,7 +316,7 @@ exports. getAllAdmin= async()=> {
         // Fetch all users from database
         // Exclude password field from the response
         const users = await userModel.find({ 
-            accountType: { $in: ["Admin", "SuperAdmin"] } 
+            accountType: { $in: ["Admin", "SuperAdmin","Viewer"] } 
         });
         
        

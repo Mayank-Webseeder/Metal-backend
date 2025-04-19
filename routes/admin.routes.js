@@ -40,6 +40,7 @@ const graphicController = require("../controller/graphics.controller");
 const displayController = require("../controller/display.controller");
 
 const accountController = require("../controller/accounts.controller");
+const notificationController = require("../controller/notification.controller");
   
     
 const{localFileUpload}= require("../utils/ImageUploader")
@@ -138,6 +139,10 @@ router.get("/accounts/getAssignedOrders",auth,accountController.getAssignedOrder
 
 //getting log routes
 router.get("/getAllLog/:orderId",auth,logController.getAllLog)
+
+
+//notification
+router.get("/getNotification",auth,notificationController.fetchAllNotification);
 
 
 
