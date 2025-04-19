@@ -5,7 +5,7 @@ const {storage} = require("../config/cloudinary");
 const upload = multer({ storage });
 
 
-const {auth, isAdmin ,isGraphics, isSuperAdmin, isDisplay, isGraphicsDisplay, isDisplayAndAdmin} = require("../middleware/auth");
+const {auth, isAdmin ,isGraphics, isSuperAdmin, isDisplay, isGraphicsDisplay, isDisplayAndAdmin , isViewer} = require("../middleware/auth");
 
 const {adminController}= require("../controller/admin.controller");
 const logController = require("../controller/log.controller");
@@ -69,7 +69,7 @@ router.get("/getAllCustomers", auth, isAdmin, getAllCustomers);
 router.put("/updateOrder/:id",auth,isAdmin,updateOrder);
 router.delete("/deleteOrder/:id",auth,isAdmin,deleteOrder);
 router.get("/getOrderById/:id",auth,isAdmin,getOrderById,);
-router.get("/getOrders",auth,isAdmin,getOrders);
+router.get("/getOrders",auth,getOrders);
 router.put("/assignOrder/:id",auth,isAdmin,assignOrder);
 router.put("/approveOrder",auth,isAdmin,approveOrder);
 

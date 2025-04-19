@@ -160,6 +160,31 @@ const isDisplay = async(req,res,next)=>{
 }
 
 
+const isViewer = async(req,res,next)=>{
+
+    try {
+        
+        if(req.user.accountType!=="Viewer"){
+            return res.status(401).json({
+                success:false,
+                message:"this is protected route for Viewer only"
+            })
+        }
+        next();
+        
+    } catch (error) {
+        console.log("error in Viewer protected route")
+        return res.status(402).json({
+            success:false,
+            error:error.message,
+            message:"user role can't be verified"
+        })
+        
+    }
+}
+
+
+
 const isGraphicsDisplay = async(req,res,next)=>{
 
     try {
@@ -208,4 +233,4 @@ const isDisplayAndAdmin = async(req,res,next)=>{
 
 
 
-module.exports={auth,isAdmin,isSuperAdmin,isAccount,isGraphics, isDisplay, isGraphicsDisplay, isDisplayAndAdmin};
+module.exports={auth,isAdmin,isSuperAdmin,isAccount,isGraphics, isDisplay, isViewer, isGraphicsDisplay, isDisplayAndAdmin};
