@@ -92,14 +92,12 @@ router.get('/files/download-all/:documentId', auth, graphicController.downloadAl
 
 // Optional route for downloading all files of a specific type
 router.get('/files/download-all-type/:documentId', auth,  graphicController.downloadAllFilesOfType);
-
 // Keep existing route for listing files
-router.get('/files/order/:orderId', auth, isAdmin, isSuperAdmin , graphicController.getFilesByOrder);
-
+router.get('/files/order/:orderId', auth, graphicController.getFilesByOrder);
 router.get('/file/order/:orderId', auth, isDisplay, graphicController.getFilesByOrder);
 
 //display routes
-router.post("/display/assignOrder/:orderId",auth,isAdmin, isSuperAdmin,displayController.assignOrderToDisplay);
+router.post("/display/assignOrder/:orderId",auth, displayController.assignOrderToDisplay);
 router.post("/display/changeStatus",auth,displayController.changeStatus);
 
 
