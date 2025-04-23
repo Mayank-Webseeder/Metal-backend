@@ -55,18 +55,12 @@ router.get("/getAllLeads", auth, isAdmin, getAllLeads);
 
 //create customer route
 router.post("/createCustomer",auth,isAdmin,createCustomer);
-
 router.put("/updateCustomer/:id",auth,isAdmin,updateCustomer);
 router.delete("/deleteCustomer/:id",auth,isAdmin,deleteCustomer);
 router.get("/getCustomerOrders/:id",auth,isAdmin,getCustomerOrders);
 router.get("/getAllCustomers", auth, isAdmin, getAllCustomers);
 
 //create Order
-
-// router.post("/createOrder",auth,isAdmin,upload.single('image'),createOrder);
-// router.post("/createOrder/:id",auth,isAdmin,createOrder);
-//router.put("/updateOrder/:id",auth,isAdmin, upload.single('image') ,updateOrder);
-
 router.put("/updateOrder/:id",auth,isAdmin,updateOrder);
 router.delete("/deleteOrder/:id",auth,isAdmin,deleteOrder);
 router.get("/getOrderById/:id",auth,isAdmin,getOrderById,);
@@ -121,11 +115,6 @@ router.get('/file/download-all-type/:documentId', auth,  displayController.downl
 
 
 
-
-
-
-
-
 router.post("/grpahics/deleteCadFile",auth,graphicController.deleteCadFileOrPhotoByIndex);
 router.post("/display/getCadFilesAndPhoto",auth,displayController.getCadFilesByOrderAndAssignedUser);
 
@@ -133,14 +122,12 @@ router.post("/display/getCadFilesAndPhoto",auth,displayController.getCadFilesByO
 //accounts section routes
 router.post("/accounts/assignOrderToAccount/:orderId",auth,accountController.assignOrderToAccount);
 router.post("/accounts/createBill",auth,accountController.createBill);
-
 router.get("/accounts/getAssignedOrders",auth,accountController.getAssignedOrders);
+
 
 
 //getting log routes
 router.get("/getAllLog/:orderId",auth,logController.getAllLog)
-
-
 //notification
 router.get("/getNotification",auth,notificationController.fetchAllNotification);
 
