@@ -69,7 +69,7 @@ exports.getOrders = async (req, res) => {
 
     const orders = await Order.find(query)
       .populate("customer", "name email")
-      .populate("assignedTo", "firstName lastName email")
+      .populate("assignedTo", "firstName lastName email accountType")
       .populate("approvedBy", "name email")
       .populate("createdBy", "name email")
       .sort({ updatedAt: -1, createdAt: -1 });
@@ -280,10 +280,11 @@ exports.updateOrder = async (req, res) => {
       const filesImage = await localFileUpload(filesArray);
       const imageUrls = filesImage.map((file) => file.path);
       updateFields.image = imageUrls;
-      console.log("imageUrls is:",imageUrls);
+      console.log("imageUrls is:", imageUrls);
       await Log.create({
         orderId: req.params.id,
-        previmage:order.image,afterimage:imageUrls})
+        previmage: order.image, afterimage: imageUrls
+      })
     }
 
     // Update the order
