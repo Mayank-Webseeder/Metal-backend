@@ -37,7 +37,7 @@ const{
 
 const graphicController = require("../controller/graphics.controller");
 
-const displayController = require("../controller/display.controller");
+const cutoutController = require("../controller/cutout.controller");
 
 const accountController = require("../controller/accounts.controller");
 const notificationController = require("../controller/notification.controller");
@@ -96,25 +96,25 @@ router.get('/files/download-all-type/:documentId', auth,  graphicController.down
 router.get('/files/order/:orderId', auth, graphicController.getFilesByOrder);
 router.get('/file/order/:orderId', auth, isCutout, graphicController.getFilesByOrder);
 
-//display routes
-router.post("/display/assignOrder/:orderId",auth, displayController.assignOrderToCutout);
-router.post("/display/changeStatus",auth,displayController.changeStatus);
+//cutout routes
+router.post("/cutout/assignOrder/:orderId",auth, cutoutController.assignOrderToCutout);
+router.post("/cutout/changeStatus",auth,cutoutController.changeStatus);
 
 
 
 
 
 // Extra routes for download  graphics
-router.get('/file/download/:documentId/:fileIndex', auth,  displayController.downloadCadFile);
+router.get('/file/download/:documentId/:fileIndex', auth,  cutoutController.downloadCadFile);
 // Add new route for downloading all files as ZIP
-router.get('/file/download-all/:documentId', auth,  displayController.downloadAllFiles);
+router.get('/file/download-all/:documentId', auth,  cutoutController.downloadAllFiles);
 // Optional route for downloading all files of a specific type
-router.get('/file/download-all-type/:documentId', auth,  displayController.downloadAllFilesOfType);
+router.get('/file/download-all-type/:documentId', auth,  cutoutController.downloadAllFilesOfType);
 
 
 
 router.post("/grpahics/deleteCadFile",auth,graphicController.deleteCadFileOrPhotoByIndex);
-router.post("/display/getCadFilesAndPhoto",auth,displayController.getCadFilesByOrderAndAssignedUser);
+router.post("/cutout/getCadFilesAndPhoto",auth,cutoutController.getCadFilesByOrderAndAssignedUser);
 
 
 //accounts section routes

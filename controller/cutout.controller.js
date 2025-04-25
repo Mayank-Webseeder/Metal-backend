@@ -1,8 +1,8 @@
 
-const Order = require("../models/order.model");
-const WorkQueue = require("../models/workQueueItem.model");
-const User = require("../models/user.models");
-const Cad = require("../models/cad.model");
+const Order = require("../models/order.model.js");
+const WorkQueue = require("../models/workQueueItem.model.js");
+const User = require("../models/user.models.js");
+const Cad = require("../models/cad.model.js");
 
 const socketManager = require('../middlewares/socketmanager.js');
 const archiver = require('archiver');
@@ -11,14 +11,14 @@ const path = require('path');
 const fs = require('fs');
 
 
-const { localFileUpload } = require("../utils/ImageUploader");
+const { localFileUpload } = require("../utils/ImageUploader.js");
 const Agenda = require('agenda');
 const dotenv= require("dotenv");
 const moment = require('moment-timezone'); 
 dotenv.config();
 const {getSockets}=require("../lib/helper.js");
-const Log= require("../models/log.model");
-const {changeStatusByCutout} = require("../service/websocketStatus")
+const Log= require("../models/log.model.js");
+const {changeStatusByCutout} = require("../service/websocketStatus.js")
 
 async function sendAssignmentNotification(req, order) {
     try {
@@ -51,12 +51,12 @@ async function sendAssignmentNotification(req, order) {
 exports.assignOrderToCutout = async (req, res) => {
     try {
       const { orderId } = req.params;
-      const { displayUserId } = req.body;
+      const { cutoutUserId } = req.body;
 
       const changes = [];
   
-      if (!orderId || !displayUserId) {
-        throw new Error("Order ID and Display User ID are required");
+      if (!orderId || !cutoutUserId) {
+        throw new Error("Order ID and Cutout User ID are required");
       }
   
       const order = await Order.findOne({
@@ -65,12 +65,12 @@ exports.assignOrderToCutout = async (req, res) => {
   
       if (!order) throw new Error("Order not found");
   
-      const displayUser = await User.findById(displayUserId);
-      if (!displayUser) throw new Error("Display user not found");
+      const cutoutUser = await User.findById(cutoutUserId);
+      if (!cutoutUser) throw new Error("Cutout user not found");
   
       
       const user1 = await User.findById(order.assignedTo);
-      const user2 = await User.findById(displayUser);
+      const user2 = await User.findById(cutoutUser);
       changes.push(
         `Assigned to changed from ${user1.name} role:${user1.accountType} to ${user2.name} role:${user2.accountType}`
       );
@@ -78,7 +78,7 @@ exports.assignOrderToCutout = async (req, res) => {
       console.log("changes is:",changes);
       
       
-      order.assignedTo = displayUserId;
+      order.assignedTo = cutoutUserId;
       if (order.status !== "InWorkQueue") order.status = "InWorkQueue";
       await order.save();
       console.log("order is,",order);
@@ -100,7 +100,7 @@ exports.assignOrderToCutout = async (req, res) => {
   
       return res.status(200).json({
         success: true,
-        message: "Order successfully assigned to display user",
+        message: "Order successfully assigned to Cutout user",
         data: {
           order: populatedOrder
         }
@@ -111,7 +111,7 @@ exports.assignOrderToCutout = async (req, res) => {
       console.error("Error assigning order:", error);
       return res.status(500).json({
         success: false,
-        message: "Order assignment to display failed",
+        message: "Order assignment to Cutout failed",
         error: error.message
       });
     }

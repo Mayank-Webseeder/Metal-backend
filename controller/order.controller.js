@@ -391,12 +391,6 @@ exports.approveOrder = async (req, res) => {
 
     await workQueueItem.save();
 
-    // // Notify display team
-    // io.to('display_team').emit('new-work-queue-item', {
-    //   orderId: order._id,
-    //   message: 'New item added to work queue'
-    // });
-
     res.status(200).json({
       success: true,
       message: "order approved",
