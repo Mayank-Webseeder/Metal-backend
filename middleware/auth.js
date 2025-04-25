@@ -136,20 +136,20 @@ const isGraphics = async(req,res,next)=>{
     }
 }
 
-const isDisplay = async(req,res,next)=>{
+const isCutout = async(req,res,next)=>{
 
     try {
         
-        if(req.user.accountType!=="Display"){
+        if(req.user.accountType!=="Cutout"){
             return res.status(401).json({
                 success:false,
-                message:"this is protected route for Display only"
+                message:"this is protected route for Cutout only"
             })
         }
         next();
         
     } catch (error) {
-        console.log("error in Display protected route")
+        console.log("error in Cutout protected route")
         return res.status(402).json({
             success:false,
             error:error.message,
@@ -185,20 +185,20 @@ const isViewer = async(req,res,next)=>{
 
 
 
-const isGraphicsDisplay = async(req,res,next)=>{
+const isGraphicsCutout = async(req,res,next)=>{
 
     try {
         
-        if(req.user.accountType!=="Graphics" && req.user.accountType!=="Display"){
+        if(req.user.accountType!=="Graphics" && req.user.accountType!=="Cutout"){
             return res.status(401).json({
                 success:false,
-                message:"this is protected route for Graphics and Display only"
+                message:"this is protected route for Graphics and Cutout only"
             })
         }
         next();
         
     } catch (error) {
-        console.log("error in Graphics and Display protected route")
+        console.log("error in Graphics and Cutout protected route")
         return res.status(402).json({
             success:false,
             error:error.message,
@@ -208,20 +208,20 @@ const isGraphicsDisplay = async(req,res,next)=>{
     }
 }
 
-const isDisplayAndAdmin = async(req,res,next)=>{
+const isCutoutAndAdmin = async(req,res,next)=>{
 
     try {
         
-        if(req.user.accountType!=="Display" && req.user.accountType!=="Admin"){
+        if(req.user.accountType!=="Cutout" && req.user.accountType!=="Admin"){
             return res.status(401).json({
                 success:false,
-                message:"this is protected route for Display and Admin only"
+                message:"this is protected route for Cutout and Admin only"
             })
         }
         next();
         
     } catch (error) {
-        console.log("error in Display and Admin protected route")
+        console.log("error in Cutout and Admin protected route")
         return res.status(402).json({
             success:false,
             error:error.message,
@@ -233,4 +233,4 @@ const isDisplayAndAdmin = async(req,res,next)=>{
 
 
 
-module.exports={auth,isAdmin,isSuperAdmin,isAccount,isGraphics, isDisplay, isViewer, isGraphicsDisplay, isDisplayAndAdmin};
+module.exports={auth,isAdmin,isSuperAdmin,isAccount,isGraphics, isCutout, isViewer, isGraphicsCutout, isCutoutAndAdmin};

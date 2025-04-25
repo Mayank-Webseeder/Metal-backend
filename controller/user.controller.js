@@ -131,7 +131,7 @@ exports.createAccount = async (req, res) => {
         
 
         // Allowed account types
-        const allowedAccountTypes = ["Admin", "Graphics", "Accounts", "Display","Viewer"];
+        const allowedAccountTypes = ["Admin", "Graphics", "Accounts", "Cutout","Display"];
         if (!allowedAccountTypes.includes(accountType)) {
             return res.status(400).json({
                 success: false,
@@ -459,7 +459,7 @@ exports.updateUser = async (req, res) => {
         }
 
         // Validate account type
-        const allowedAccountTypes = ["SuperAdmin", "Admin", "Graphics", "Accounts", "Display"];
+        const allowedAccountTypes = ["SuperAdmin", "Admin", "Graphics", "Accounts", "Cutout", "Display"];
         if (!allowedAccountTypes.includes(accountType)) {
             return res.status(400).json({
                 success: false,

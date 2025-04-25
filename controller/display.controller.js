@@ -18,7 +18,7 @@ const moment = require('moment-timezone');
 dotenv.config();
 const {getSockets}=require("../lib/helper.js");
 const Log= require("../models/log.model");
-const {changeStatusByDisplay} = require("../service/websocketStatus")
+const {changeStatusByCutout} = require("../service/websocketStatus")
 
 async function sendAssignmentNotification(req, order) {
     try {
@@ -48,7 +48,7 @@ async function sendAssignmentNotification(req, order) {
     }
   }
 
-exports.assignOrderToDisplay = async (req, res) => {
+exports.assignOrderToCutout = async (req, res) => {
     try {
       const { orderId } = req.params;
       const { displayUserId } = req.body;
@@ -131,7 +131,7 @@ exports.changeStatus= async(req,res)=>{
       }
       order.status= status;
       await order.save();
-      changeStatusByDisplay(req,order);
+      changeStatusByCutout(req,order);
       
       return res.status(200).json({
         success:true,

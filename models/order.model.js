@@ -27,8 +27,6 @@ const orderSchema = new mongoose.Schema({
       "PendingApproval",
       "Approved",
       "InWorkQueue",
-      // "InGraphicsWorkQueue",
-      // "InDisplayWorkQueue",
       "Completed",
       "InAccountSection",
       "Billed",

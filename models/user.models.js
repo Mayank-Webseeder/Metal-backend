@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
     },
     accountType: {
         type: String,
-        enum: ["Admin", "SuperAdmin", "Graphics", "Accounts", "Display","Viewer"],
+        enum: ["Admin", "SuperAdmin", "Graphics", "Accounts", "Cutout", "Display"],
         required: true,
     },
     isActive: { 

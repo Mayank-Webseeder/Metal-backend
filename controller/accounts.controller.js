@@ -4,7 +4,7 @@ const User = require("../models/user.models");
 // Notification sending function
 // Update your sendAssignmentNotification function
 const socketManager = require('../middlewares/socketmanager.js');
-const{changeStatusByDisplay} = require("../service/websocketStatus");
+const{changeStatusByCutout} = require("../service/websocketStatus");
 
 const Log= require("../models/log.model");
 
@@ -231,7 +231,7 @@ exports.assignOrderToAccount = async (req, res) => {
       order.status = "Billed";
       changes.push(`Status changed from "${previousStatus}" to "${order.status}"`);
       await order.save();
-      changeStatusByDisplay(req,order);
+      changeStatusByCutout(req,order);
 
       if (changes.length > 0) {
         for (const change of changes) {

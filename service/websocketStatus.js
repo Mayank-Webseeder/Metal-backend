@@ -47,7 +47,7 @@ exports.changeStatus=async(req, workQueueItem)=> {
   }
 }
 
-exports.changeStatusByDisplay=async(req,order)=> {
+exports.changeStatusByCutout=async(req,order)=> {
   try {
     
     // Get admin users

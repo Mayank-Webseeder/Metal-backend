@@ -5,7 +5,7 @@ const {storage} = require("../config/cloudinary");
 const upload = multer({ storage });
 
 
-const {auth, isAdmin ,isGraphics, isSuperAdmin, isDisplay, isGraphicsDisplay, isDisplayAndAdmin , isViewer} = require("../middleware/auth");
+const {auth, isAdmin ,isGraphics, isSuperAdmin, isCutout, isGraphicsCutout, isCutoutAndAdmin , isViewer} = require("../middleware/auth");
 
 const {adminController}= require("../controller/admin.controller");
 const logController = require("../controller/log.controller");
@@ -78,7 +78,7 @@ router.get('/pending', auth, isAdmin, graphicController.getPendingOrders);
 router.put( '/reassign', auth, isAdmin, graphicController.reassignUnassignedOrders);
 
 // Get user's assigned orders (for graphics team)
-router.get('/assigned', auth, isGraphicsDisplay, graphicController.getUserAssignedOrders);
+router.get('/assigned', auth, isGraphicsCutout, graphicController.getUserAssignedOrders);
 
 router.post('/updateWorkQueue',auth,isGraphics,graphicController.updateWorkQueueStatus);
 
@@ -94,10 +94,10 @@ router.get('/files/download-all/:documentId', auth, graphicController.downloadAl
 router.get('/files/download-all-type/:documentId', auth,  graphicController.downloadAllFilesOfType);
 // Keep existing route for listing files
 router.get('/files/order/:orderId', auth, graphicController.getFilesByOrder);
-router.get('/file/order/:orderId', auth, isDisplay, graphicController.getFilesByOrder);
+router.get('/file/order/:orderId', auth, isCutout, graphicController.getFilesByOrder);
 
 //display routes
-router.post("/display/assignOrder/:orderId",auth, displayController.assignOrderToDisplay);
+router.post("/display/assignOrder/:orderId",auth, displayController.assignOrderToCutout);
 router.post("/display/changeStatus",auth,displayController.changeStatus);
 
 
