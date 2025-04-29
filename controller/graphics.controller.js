@@ -42,7 +42,7 @@ async function findAvailableGraphicsUser() {
                                 $expr: {
                                     $and: [
                                         { $eq: ['$assignedTo', '$$userId'] },
-                                        { $in: ['$status', ['Pending', 'InProgress']] }
+                                        { $in: ['$status', ['graphics_pending', 'InProgress']] }
                                     ]
                                 }
                             }
@@ -155,7 +155,7 @@ exports.createOrder = async (req, res) => {
 
     
 
-
+        console.log("print  ");
         //upload file locally
         const filesArray = Array.isArray(files) ? files : [files];
         const filesImage = await localFileUpload(
@@ -192,7 +192,7 @@ exports.createOrder = async (req, res) => {
             dimensions,
             image: imageUrls,
             createdBy: req.user.id,
-            status: 'InWorkQueue',
+            status: 'graphics_pending',
             assignedTo: assignedGraphicsUser ? assignedGraphicsUser._id : null
         });
 
@@ -202,14 +202,14 @@ exports.createOrder = async (req, res) => {
         // Create Work Queue Item
         const workQueueItem = new WorkQueue({
             order: order._id,
-            status: 'Pending',
+            status: 'graphics_pending',
             assignedTo: assignedGraphicsUser ? assignedGraphicsUser._id : null,
             priority: calculatePriority(requirements),
             estimatedCompletionTime: calculateEstimatedCompletion(),
             processingSteps: [
                 {
                     stepName: 'Graphics Processing',
-                    status: 'Pending',
+                    status: 'graphics_pending',
                     assignedTo: assignedGraphicsUser ? assignedGraphicsUser._id : null
                 }
             ]
@@ -519,7 +519,7 @@ process.on('SIGINT', gracefulShutdown);
 
 
 // Allowed status values defined in your WorkQueue schema
-const allowedStatuses = ["Pending", "InProgress", "Completed", "Failed", "Paused"];
+const allowedStatuses = ["graphics_pending", "graphics_in_progress", "graphics_completed"];
 
 exports.updateWorkQueueStatus = async (req, res) => {
 
@@ -568,9 +568,9 @@ exports.updateWorkQueueStatus = async (req, res) => {
           // Update status and timestamps
          const istTime = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"); 
 
-        if (status === "InProgress") {
+        if (status === "graphics_in_progress") {
               workQueueItem.startedAt = istTime; // Capture start time
-          } else if (status === "Completed") {
+          } else if (status === "graphics_completed") {
               workQueueItem.completedAt = istTime; // Capture completion time
           }
 

@@ -79,7 +79,7 @@ exports.assignOrderToCutout = async (req, res) => {
       
       
       order.assignedTo = cutoutUserId;
-      if (order.status !== "InWorkQueue") order.status = "InWorkQueue";
+      if (order.status !== "graphics_pending") order.status = "cutout_pending";
       await order.save();
       console.log("order is,",order);
 
@@ -137,8 +137,6 @@ exports.changeStatus= async(req,res)=>{
         success:true,
         message:"order has been updated successfully"
       })
-
-
       
     } catch (error) {
       console.log("error",error);

@@ -9,13 +9,9 @@ const workQueueSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: [
-            "Pending", 
-            "InProgress", 
-            "Completed", 
-            "Failed", 
-            "Paused"
+            "graphics_pending","graphics_in_progress", "graphics_completed" ,
         ],
-        default: "Pending"
+        default: "graphics_pending"
     },
     assignedTo: {
         type: mongoose.Types.ObjectId,
@@ -34,8 +30,8 @@ const workQueueSchema = new mongoose.Schema({
         },
         status: {
             type: String,
-            enum: ["Pending", "InProgress", "Completed", "Failed"],
-            default: "Pending"
+            enum: ["graphics_pending", "graphics_in_progress", "graphics_completed", ],
+            default: "graphics_pending"
         },
         startedAt: Date,
         completedAt: Date,
@@ -82,11 +78,9 @@ workQueueSchema.pre('save', async function(next) {
             if (order) {
                 // Map work queue status to order status
                 const statusMapping = {
-                    "Pending": "InWorkQueue",
-                    "InProgress": "InProgress",
-                    "Completed": "Completed",
-                    "Failed": "New",
-                    "Paused": "Assigned"
+                    "graphics_pending": "graphics_pending",
+                    "graphics_in_progress": "graphics_in_progress",
+                    "graphics_completed": "graphics_completed", 
                 };
 
                 order.status = statusMapping[this.status] || order.status;
@@ -119,7 +113,7 @@ workQueueSchema.methods.logError = function(errorMessage) {
 // Static method to find next pending item
 workQueueSchema.statics.findNextPendingItem = function() {
     return this.findOne({ 
-        status: 'Pending' 
+        status: 'graphics_pending' 
     })
     .sort({ 
         priority: -1,  // Higher priority first

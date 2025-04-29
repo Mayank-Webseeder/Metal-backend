@@ -386,7 +386,7 @@ exports.approveOrder = async (req, res) => {
     // Create work queue item
     const workQueueItem = new WorkQueueItem({
       order: order._id,
-      status: "Pending",
+      status: "graphics_pending",
     });
 
     await workQueueItem.save();

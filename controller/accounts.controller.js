@@ -61,7 +61,7 @@ exports.assignOrderToAccount = async (req, res) => {
       if (!accountUser) throw new Error("Account user not found");
   
       // Check if order is in a valid state to be assigned to accounting
-      if (order.status !== "Completed" && order.status !== "Billed" && order.status !== "ReadyForBilling") {
+      if (order.status !== "cutout_completed" && order.status !== "accounts_billed" && order.status !== "accounts_paid") {
         return res.status(400).json({
           success: false,
           message: "Cannot assign to accounting for an order that is not completed or ready for billing"
@@ -75,7 +75,7 @@ exports.assignOrderToAccount = async (req, res) => {
             
       
       order.assignedTo = accountUserId;
-      order.status = "InAccountSection";
+      order.status = "accounts_pending";
       const user2 = await User.findById(order.assignedTo);
             changes.push(
               `Assigned to changed from ${user1.name} role:${user1.accountType} to ${user2.name} role:${user2.accountType}`
@@ -184,7 +184,7 @@ exports.assignOrderToAccount = async (req, res) => {
         });
       }
       
-      if (order.status !== 'Completed' && order.status !== 'InAccountSection') {
+      if (order.status !== 'cutout_complete' && order.status !== 'accounts_pending') {
         return res.status(400).json({
           success: false,
           message: "Cannot create bill for an order that is not completed or ready for billing"
@@ -261,7 +261,7 @@ exports.assignOrderToAccount = async (req, res) => {
   };
 
 
-  
+
   
 
   
@@ -334,10 +334,6 @@ const updateBill = async(req,res)=>{
 
 
 
-
-
-
-
 exports.accountController=async(req,res)=>{
     try {
         
@@ -354,3 +350,49 @@ exports.accountController=async(req,res)=>{
         
     }
 }
+
+
+exports.updateAccountStatus = async (req, res) => {
+  try {
+    const { orderId, status } = req.body;
+    
+    // Validate that the status is one of the allowed values
+    const allowedStatuses = ['accounts_pending', 'accounts_billed', 'accounts_paid'];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status. Allowed statuses are: accounts_pending, accounts_billed, accounts_paid"
+      });
+    }
+    
+    const order = await Order.findOne({ _id: orderId });
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+    
+    // Update the order status
+    order.status = status;
+    await order.save();
+    
+    // Emit a socket event to notify other users (similar to changeStatusByCutout function)
+    // This would typically be handled by a separate function or service
+    // For example:
+    // notifyOrderUpdate(req, order);
+    
+    return res.status(200).json({
+      success: true,
+      message: "Order status has been updated successfully"
+    });
+    
+  } catch (error) {
+    console.log("Error updating account status:", error);
+    return res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

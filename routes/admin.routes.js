@@ -121,6 +121,7 @@ router.post("/cutout/getCadFilesAndPhoto",auth,cutoutController.getCadFilesByOrd
 router.post("/accounts/assignOrderToAccount/:orderId",auth,accountController.assignOrderToAccount);
 router.post("/accounts/createBill",auth,accountController.createBill);
 router.get("/accounts/getAssignedOrders",auth,accountController.getAssignedOrders);
+router.post("/accounts/updateStatus", auth, accountController.updateAccountStatus);
 
 
 
