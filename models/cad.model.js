@@ -11,6 +11,9 @@ const cadSchema= new mongoose.Schema({
     CadFile:[{
         type:String,
         
+    }],
+    textFiles: [{
+        type: String,
     }]
 },{timestamps:true})
 module.exports=mongoose.model("Cad",cadSchema);

@@ -11,6 +11,9 @@ const dotenv= require("dotenv");
 const moment = require('moment-timezone'); // To format date & time
 dotenv.config();
 const {getSockets}=require("../lib/helper.js");
+const { assignOrderToCutOut } = require("./autoCutout.controller.js");
+const Log = require("../models/log.model")
+
 
 const agenda = new Agenda({ db: { address: process.env.MONGODB_URL } });
 
@@ -130,149 +133,313 @@ function calculateEstimatedCompletion() {
 }
 
 // Order Creation Controller
-exports.createOrder = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+// exports.createOrder = async (req, res) => {
+//     const session = await mongoose.startSession();
+//     session.startTransaction();
     
 
-    try {
-        const { requirements, dimensions,assignedTo } = req.body;
-        const files = req.files.images;
-        const customerId = req.params.id;
-        // console.log("customerId is:",customerId);
-        // console.log("assigned to is:",assignedTo);
-    
+//     try {
+//         const { requirements, dimensions,assignedTo } = req.body;
+//         const files = req.files.images;
+//         const customerId = req.params.id;
+//         // console.log("customerId is:",customerId);
+//         // console.log("assigned to is:",assignedTo);
+
         
 
-        // Validate input
-        if (!requirements || !dimensions || !files) {
-            return res.status(400).json({
-                success: false,
-                message: "All fields are mandatory"
-            });
-        }
-        console.log("data validate successfully in create order controller");
+//         // Validate input
+//         if (!requirements || !dimensions || !files) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "All fields are mandatory"
+//             });
+//         }
+//         console.log("data validate successfully in create order controller");
 
     
 
-        console.log("print  ");
-        //upload file locally
-        const filesArray = Array.isArray(files) ? files : [files];
-        const filesImage = await localFileUpload(
-                files,
+//         console.log("print  ");
+//         //upload file locally
+//         const filesArray = Array.isArray(files) ? files : [files];
+//         const filesImage = await localFileUpload(
+//                 files,
                 
-            );
+//             );
             
-        const imageUrls = filesImage.map((file) => file.path);
-        // console.log("imageUrls is:",imageUrls);
-        // console.log("files image in create order controller",filesImage);
+//         const imageUrls = filesImage.map((file) => file.path);
+//         // console.log("imageUrls is:",imageUrls);
+//         // console.log("files image in create order controller",filesImage);
 
 
 
-        // Find an available Graphics user
-        let assignedGraphicsUser 
-        // console.log("before any initialisation of assignedTo",assignedGraphicsUser);
+//         // Find an available Graphics user
+//         let assignedGraphicsUser 
+//         // console.log("before any initialisation of assignedTo",assignedGraphicsUser);
 
-        if(assignedTo!=='undefined'){
-            assignedGraphicsUser={
-                _id:assignedTo,
-            }
-            // console.log("assignedGraphicsUser value if assignedTo present",assignedTo);
-        }
-        else{
-            assignedGraphicsUser=await findAvailableGraphicsUser();
-            // console.log("assignedGraphicsUser is if assignedTo absent:",assignedGraphicsUser);
-        }
+//         if(assignedTo!=='undefined'){
+//             assignedGraphicsUser={
+//                 _id:assignedTo,
+//             }
+//             // console.log("assignedGraphicsUser value if assignedTo present",assignedTo);
+//         }
+//         else{
+//             assignedGraphicsUser=await findAvailableGraphicsUser();
+//             // console.log("assignedGraphicsUser is if assignedTo absent:",assignedGraphicsUser);
+//         }
         
 
-        // Create new order
-        const newOrder = new Order({
-            customer: customerId,
-            requirements,
-            dimensions,
-            image: imageUrls,
-            createdBy: req.user.id,
-            status: 'graphics_pending',
-            assignedTo: assignedGraphicsUser ? assignedGraphicsUser._id : null
-        });
+//         // Create new order
+//         const newOrder = new Order({
+//             customer: customerId,
+//             requirements,
+//             dimensions,
+//             image: imageUrls,
+//             createdBy: req.user.id,
+//             status: 'graphics_pending',
+//             assignedTo: assignedGraphicsUser ? assignedGraphicsUser._id : null
+//         });
 
-        // Save order
-        const order = await newOrder.save({ session });
+//         // Save order
+//         const order = await newOrder.save({ session });
 
-        // Create Work Queue Item
-        const workQueueItem = new WorkQueue({
-            order: order._id,
-            status: 'graphics_pending',
-            assignedTo: assignedGraphicsUser ? assignedGraphicsUser._id : null,
-            priority: calculatePriority(requirements),
-            estimatedCompletionTime: calculateEstimatedCompletion(),
-            processingSteps: [
-                {
-                    stepName: 'Graphics Processing',
-                    status: 'graphics_pending',
-                    assignedTo: assignedGraphicsUser ? assignedGraphicsUser._id : null
-                }
-            ]
-        });
+//         // Create Work Queue Item
+//         const workQueueItem = new WorkQueue({
+//             order: order._id,
+//             status: 'graphics_pending',
+//             assignedTo: assignedGraphicsUser ? assignedGraphicsUser._id : null,
+//             priority: calculatePriority(requirements),
+//             estimatedCompletionTime: calculateEstimatedCompletion(),
+//             processingSteps: [
+//                 {
+//                     stepName: 'Graphics Processing',
+//                     status: 'graphics_pending',
+//                     assignedTo: assignedGraphicsUser ? assignedGraphicsUser._id : null
+//                 }
+//             ]
+//         });
 
-        // Save Work Queue Item
-        await workQueueItem.save({ session });
+//         // Save Work Queue Item
+//         await workQueueItem.save({ session });
 
-        // Schedule order processing job
-        await agenda.schedule('in 1 minute', 'process-order', {
-            orderId: order._id,
-            workQueueId: workQueueItem._id,
-            assignedUserId: assignedGraphicsUser ? assignedGraphicsUser._id : null
-        });
+//         // Schedule order processing job
+//         await agenda.schedule('in 1 minute', 'process-order', {
+//             orderId: order._id,
+//             workQueueId: workQueueItem._id,
+//             assignedUserId: assignedGraphicsUser ? assignedGraphicsUser._id : null
+//         });
 
-        // Commit transaction
-        await session.commitTransaction();
-        session.endSession();
+//         // Commit transaction
+//         await session.commitTransaction();
+//         session.endSession();
 
-        // Populate and return order details
-        const populatedOrder = await Order.findById(order._id)
-            .populate("customer", "name email")
+//         // Populate and return order details
+//         const populatedOrder = await Order.findById(order._id)
+//             .populate("customer", "name email")
             
-            .populate("assignedTo", "name email")
-            .populate("createdBy", "name email");
+//             .populate("assignedTo", "name email")
+//             .populate("createdBy", "name email");
 
-        // Send notification to assigned user if exists
-        if (assignedGraphicsUser) {
-            await sendAssignmentNotification(req,order);
-        }
+//         // Send notification to assigned user if exists
+//         if (assignedGraphicsUser) {
+//             await sendAssignmentNotification(req,order);
+//         }
 
-        res.status(201).json({
-            success: true,
-            message: assignedGraphicsUser 
-                ? "Order created and assigned to Graphics user" 
-                : "Order created, awaiting Graphics user assignment",
-            data: {
-                order: populatedOrder,
-                assignedUser: assignedGraphicsUser ? {
-                    _id: assignedGraphicsUser._id,
-                    name: assignedGraphicsUser.name,
-                    email: assignedGraphicsUser.email
-                } : null
-            }
-        });
+//         res.status(201).json({
+//             success: true,
+//             message: assignedGraphicsUser 
+//                 ? "Order created and assigned to Graphics user" 
+//                 : "Order created, awaiting Graphics user assignment",
+//             data: {
+//                 order: populatedOrder,
+//                 assignedUser: assignedGraphicsUser ? {
+//                     _id: assignedGraphicsUser._id,
+//                     name: assignedGraphicsUser.name,
+//                     email: assignedGraphicsUser.email
+//                 } : null
+//             }
+//         });
 
-    } catch (error) {
-         // Abort transaction
-        // await session.abortTransaction();
-        // session.endSession();
-        if (session.inTransaction()) {
-            await session.abortTransaction();
-        }
-        session.endSession();
+//     } catch (error) {
+//          // Abort transaction
+//         // await session.abortTransaction();
+//         // session.endSession();
+//         if (session.inTransaction()) {
+//             await session.abortTransaction();
+//         }
+//         session.endSession();
 
-        console.error("Error creating order", error);
-        return res.status(400).json({
-            success: false,
-            message: "Problem in creating the order",
-            error: error.message
-        });
+//         console.error("Error creating order", error);
+//         return res.status(400).json({
+//             success: false,
+//             message: "Problem in creating the order",
+//             error: error.message
+//         });
 
-    }
+//     }
+// };
+
+exports.createOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
+
+  try {
+      const { requirements, dimensions, assignedTo } = req.body;
+      const files = req.files.images;
+      const customerId = req.params.id;
+      // console.log("customerId is:",customerId);
+      // console.log("assigned to is:",assignedTo);
+      const changes = [];
+      
+
+      // Validate input
+      if (!requirements || !dimensions || !files) {
+          return res.status(400).json({
+              success: false,
+              message: "All fields are mandatory"
+          });
+      }
+      console.log("data validate successfully in create order controller");
+
+  
+
+      console.log("print  ");
+      //upload file locally
+      const filesArray = Array.isArray(files) ? files : [files];
+      const filesImage = await localFileUpload(
+              files,
+              
+          );
+          
+      const imageUrls = filesImage.map((file) => file.path);
+      // console.log("imageUrls is:",imageUrls);
+      // console.log("files image in create order controller",filesImage);
+
+
+
+      // Find an available Graphics user
+      let assignedGraphicsUser 
+      // console.log("before any initialisation of assignedTo",assignedGraphicsUser);
+
+      if(assignedTo !== 'undefined'){
+          assignedGraphicsUser = {
+              _id: assignedTo,
+          }
+          // console.log("assignedGraphicsUser value if assignedTo present",assignedTo);
+      }
+      else{
+          assignedGraphicsUser = await findAvailableGraphicsUser();
+          // console.log("assignedGraphicsUser is if assignedTo absent:",assignedGraphicsUser);
+      }
+      
+
+      // Create new order
+      const newOrder = new Order({
+          customer: customerId,
+          requirements,
+          dimensions,
+          image: imageUrls,
+          createdBy: req.user.id,
+          status: 'graphics_pending',
+          assignedTo: assignedGraphicsUser ? assignedGraphicsUser._id : null
+      });
+
+      // Save order
+      const order = await newOrder.save({ session });
+
+      // Get current user info for logs
+      const createdByUser = await User.findById(req.user.id);
+
+      changes.push(`Order created by ${createdByUser.name} role (${createdByUser.accountType})`);
+      
+      // If order is assigned, add that to the logs too
+      if (assignedGraphicsUser) {
+          const assignedUser = await User.findById(assignedGraphicsUser._id);
+          changes.push(`Order Assigned to ${assignedUser.name} role (${assignedUser.accountType})`);
+      } else {
+          changes.push(`Order awaiting graphics user assignment`);
+      }
+
+      // Save logs
+      if (changes.length > 0) {
+          for (const change of changes) {
+              await Log.create({
+                  orderId: order._id,
+                  changes: change,
+              }, { session });
+          }
+      }
+
+      // Create Work Queue Item
+      const workQueueItem = new WorkQueue({
+          order: order._id,
+          status: 'graphics_pending',
+          assignedTo: assignedGraphicsUser ? assignedGraphicsUser._id : null,
+          priority: calculatePriority(requirements),
+          estimatedCompletionTime: calculateEstimatedCompletion(),
+          processingSteps: [
+              {
+                  stepName: 'Graphics Processing',
+                  status: 'graphics_pending',
+                  assignedTo: assignedGraphicsUser ? assignedGraphicsUser._id : null
+              }
+          ]
+      });
+
+      // Save Work Queue Item
+      await workQueueItem.save({ session });
+
+      // Schedule order processing job
+      await agenda.schedule('in 1 minute', 'process-order', {
+          orderId: order._id,
+          workQueueId: workQueueItem._id,
+          assignedUserId: assignedGraphicsUser ? assignedGraphicsUser._id : null
+      });
+
+      // Commit transaction
+      await session.commitTransaction();
+      session.endSession();
+
+      // Populate and return order details
+      const populatedOrder = await Order.findById(order._id)
+          .populate("customer", "name email")
+          .populate("assignedTo", "name email")
+          .populate("createdBy", "name email");
+
+      // Send notification to assigned user if exists
+      if (assignedGraphicsUser) {
+          await sendAssignmentNotification(req, order);
+      }
+
+      res.status(201).json({
+          success: true,
+          message: assignedGraphicsUser 
+              ? "Order created and assigned to Graphics user" 
+              : "Order created, awaiting Graphics user assignment",
+          data: {
+              order: populatedOrder,
+              assignedUser: assignedGraphicsUser ? {
+                  _id: assignedGraphicsUser._id,
+                  name: assignedGraphicsUser.name,
+                  email: assignedGraphicsUser.email
+              } : null
+          }
+      });
+
+  } catch (error) {
+      // Abort transaction
+      if (session.inTransaction()) {
+          await session.abortTransaction();
+      }
+      session.endSession();
+
+      console.error("Error creating order", error);
+      return res.status(400).json({
+          success: false,
+          message: "Problem in creating the order",
+          error: error.message
+      });
+  }
 };
 
 // Get Pending Orders
@@ -529,6 +696,7 @@ exports.updateWorkQueueStatus = async (req, res) => {
     try {
         // Destructure workQueueId and new status from the request body
         const { workQueueId, status } = req.body;
+        const changes = [];
        
         
 
@@ -559,7 +727,8 @@ exports.updateWorkQueueStatus = async (req, res) => {
                 message: 'WorkQueue item not found'
             });
         }
-
+        const previousStatus = workQueueItem.status;
+        const currentUser = await User.findById(req.user.id);
         // Update the WorkQueue item's status
         workQueueItem.status = status;
         // Saving the document will trigger your pre('save') middleware that updates the Order status.
@@ -577,6 +746,17 @@ exports.updateWorkQueueStatus = async (req, res) => {
 
 
         const updatedWorkQueueItem = await workQueueItem.save({ session });
+
+        changes.push(`${currentUser.name} role (${currentUser.accountType}) has changed status of order from "${previousStatus}" to "${status}"`);
+
+        if (changes.length > 0) {
+          for (const change of changes) {
+              await Log.create({
+                  orderId: workQueueItem.order,
+                  changes: change,
+              }, { session });
+          }
+      }
         
 
         // Commit the transaction
@@ -584,6 +764,12 @@ exports.updateWorkQueueStatus = async (req, res) => {
         session.endSession();
         
         changeStatus(req,workQueueItem);
+
+        // if (status === "admin_approved") {
+        //   // Call the assignOrderToCutOut function
+        //   await assignOrderToCutOut(orderId, req, res);
+        //   return; // The response is handled by assignOrderToCutOut
+        // }
 
         res.status(200).json({
             success: true,

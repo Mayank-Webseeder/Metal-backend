@@ -229,7 +229,7 @@ exports.assignOrderToAccount = async (req, res) => {
       const previousStatus=order.status;
       console.log("previous status is:",previousStatus);
       order.status = "Billed";
-      changes.push(`Status changed from "${previousStatus}" to "${order.status}"`);
+      changes.push(`Order Status changed from  "${previousStatus}" to "${order.status}"`);
       await order.save();
       changeStatusByCutout(req,order);
 

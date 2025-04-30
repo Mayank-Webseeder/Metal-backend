@@ -19,6 +19,7 @@ dotenv.config();
 const {getSockets}=require("../lib/helper.js");
 const Log= require("../models/log.model.js");
 const {changeStatusByCutout} = require("../service/websocketStatus.js")
+const {assignToAccounts} = require("./autoAccounts.controller.js")
 
 async function sendAssignmentNotification(req, order) {
     try {
@@ -117,37 +118,113 @@ exports.assignOrderToCutout = async (req, res) => {
     }
   };
 
-exports.changeStatus= async(req,res)=>{
-    try {
-      const {orderId,status}= req.body;
+// exports.changeStatus= async(req,res)=>{
+//     try {
+//       const {orderId,status}= req.body;
       
-      const order = await Order.findOne({_id:orderId});
+//       const order = await Order.findOne({_id:orderId});
      
-      if(!order){
-        return res.status(404).json({
-          success:false,
-          message:"order not found"
-        })
-      }
-      order.status= status;
+//       if(!order){
+//         return res.status(404).json({
+//           success:false,
+//           message:"order not found"
+//         })
+//       }
+//       order.status= status;
+//       await order.save();
+//       changeStatusByCutout(req,order);
+      
+//       return res.status(200).json({
+//         success:true,
+//         message:"order has been updated successfully"
+//       })
+      
+//     } catch (error) {
+//       console.log("error",error);
+//       return res.status(400).json({
+//         success:false,
+//         message:error.message
+//       })
+      
+//     }
+//   }
+  
+exports.changeStatus = async (req, res) => {
+  try {
+    const { orderId, status } = req.body;
+    
+    const order = await Order.findOne({ _id: orderId });
+   
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "order not found"
+      });
+    }
+
+    // If status changing to cutout_completed, assign to accounts
+    if (status === "cutout_completed") {
+      console.log("inside cutout_completed status change");
+      order.status = status;
       await order.save();
-      changeStatusByCutout(req,order);
+      const cutoutUser = await User.findById(order.assignedTo);
+      // Log the status change
+      await Log.create({
+        orderId: order._id,
+        changes: `Order Status changed by ${cutoutUser.name} from "${order.status}" to "${status}"`
+      });
+
+      try {
+        // Automatically assign to accounts user
+        const { cutoutId, assignedTo: accountsUser } = await assignToAccounts(order._id, req);
+        
+        return res.status(200).json({
+          success: true,
+          message: "Order has been completed by cutout and assigned to accounts",
+          order
+        });
+      } catch (assignError) {
+        console.error("Error assigning to accounts:", assignError);
+        return res.status(500).json({
+          success: false,
+          message: "Order status updated but assignment to accounts failed",
+          error: assignError.message
+        });
+      }
+    } else {
+      // For other status changes, just update the status
+      order.status = status;
+      await order.save();
+
+      const cutoutUser = await User.findById(order.assignedTo);
+      
+      // Log the status change
+      await Log.create({
+        orderId: order._id,
+        changes: `Order Status changed by ${cutoutUser.name} from "${order.status}" to "${status}"`
+      });
+      
+      // If there's an existing notification function, call it
+      if (typeof changeStatusByCutout === 'function') {
+        changeStatusByCutout(req, order);
+      }
+
+      
       
       return res.status(200).json({
-        success:true,
-        message:"order has been updated successfully"
-      })
-      
-    } catch (error) {
-      console.log("error",error);
-      return res.status(400).json({
-        success:false,
-        message:error.message
-      })
-      
+        success: true,
+        message: "Order status has been updated successfully"
+      });
     }
+    
+  } catch (error) {
+    console.log("error", error);
+    return res.status(400).json({
+      success: false,
+      message: error.message
+    });
   }
-  
+};
   
 
   exports.getCadFilesByOrderAndAssignedUser = async (req, res) => {

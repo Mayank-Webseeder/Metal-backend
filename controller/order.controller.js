@@ -8,6 +8,7 @@ const {
 const { notifyOrderUpdated } = require("../service/websocketStatus");
 const Log = require("../models/log.model");
 const User = require("../models/user.models");
+const {assignOrderToCutOut} = require('./autoCutout.controller');
 
 exports.assignOrder = async (req, res) => {
   try {
@@ -264,13 +265,33 @@ exports.updateOrder = async (req, res) => {
       const user1 = await User.findById(order.assignedTo);
       const user2 = await User.findById(assignedTo);
       changes.push(
-        `Assigned to changed from ${user1.name} role:${user1.accountType} to ${user2.name} role:${user2.accountType}`
+        `Order Assigned has been changed from ${user1.name} role (${user1.accountType}) to ${user2.name} role (${user2.accountType})`
       );
     }
 
+    // if (status && status !== order.status) {
+    //   updateFields.status = status;
+    //   changes.push(`Status changed from "${order.status}" to "${status}"`);
+    // }
+    
     if (status && status !== order.status) {
-      updateFields.status = status;
-      changes.push(`Status changed from "${order.status}" to "${status}"`);
+      if (status == "cutout_pending") {
+        console.log("inside admin approved if ");
+        updateFields.status = status;
+        changes.push(`Order Status changed from "${order.status}" to "${status}"`);
+        const { cutoutId, assignedTo: cutoutUser } = await assignOrderToCutOut(order._id, req);
+        console.log("assigned to is:",assignedTo);
+        const user1 = await User.findById(order.assignedTo);
+        updateFields.assignedTo = cutoutId;
+        const user2 = await User.findById(assignedTo);
+        console.log("user2 is:",user2)
+        changes.push(
+          `Order was approved by Admin. It was initially assigned to ${user1.name} role (${user1.accountType}) and is now reassigned to ${user2.name} role(${user2.accountType})`
+        );
+      } else {
+        updateFields.status = status;
+        changes.push(`Order Status changed from "${order.status}" to "${status}"`);
+      }
     }
 
     // Handle file uploads
