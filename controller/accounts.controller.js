@@ -6,6 +6,7 @@ const User = require("../models/user.models");
 const socketManager = require('../middlewares/socketmanager.js');
 const{changeStatusByCutout} = require("../service/websocketStatus");
 
+
 const Log= require("../models/log.model");
 
 async function sendAssignmentNotification(req, order) {
@@ -373,6 +374,8 @@ exports.updateAccountStatus = async (req, res) => {
         message: "Order not found"
       });
     }
+
+    const prevStatus = order.status;
     
     // Update the order status
     order.status = status;
@@ -382,6 +385,19 @@ exports.updateAccountStatus = async (req, res) => {
     // This would typically be handled by a separate function or service
     // For example:
     // notifyOrderUpdate(req, order);
+
+    const accountUser = await User.findById(order.assignedTo);
+          
+          // Log the status change
+          await Log.create({
+            orderId: order._id,
+            changes: `Order Status changed by ${accountUser.name} from "${prevStatus}" to "${status}"`
+          });
+
+      if (typeof changeStatusByCutout === 'function') {
+            changeStatusByCutout(req, order);
+          }
+    
     
     return res.status(200).json({
       success: true,
@@ -396,3 +412,4 @@ exports.updateAccountStatus = async (req, res) => {
     });
   }
 };
+

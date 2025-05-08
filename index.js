@@ -61,12 +61,14 @@ const adminRoutes = require("./routes/admin.routes");
 const designerRoutes = require("./routes/designer.routes");
 const superAdminRoutes = require("./routes/superAdmin.routes");
 const accountRoutes = require("./routes/account.routes");
+const invoiceRoutes = require("./routes/invoice.routes.js");
 
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/sa", superAdminRoutes);
 app.use("/api/v1/d", designerRoutes);
 app.use("/api/v1/ac", accountRoutes);
+app.use("/api/v1/invoices", invoiceRoutes);
 
 app.get("/", (req, res) => {
   return res.json({ message: "Your server is up and running" });

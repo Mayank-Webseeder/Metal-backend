@@ -114,118 +114,6 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-// exports.updateOrder = async (req, res) => {
-//   try {
-
-//     const { requirements, dimensions,assignedTo,status} = req.body;
-
-//     // Check if order exists
-//     let order = await Order.findById(req.params.id);
-//     if (!order) {
-//       return res.status(404).json({ msg: 'Order not found' });
-//     }
-
-//     const updateFields = {};
-//     if (requirements) updateFields.requirements = requirements;
-//     if (dimensions) updateFields.dimensions = dimensions;
-//     if (assignedTo) updateFields.assignedTo = assignedTo;
-//     if (status) {
-//       updateFields.status = status
-//       changeStatusByAdmin(req,order);
-//     }
-//       ;
-
-//     //check if new files are uploaded
-//     if(req.files && req.files.images){
-//       const files= req.files.images;
-//      const filesArray = Array.isArray(files) ? files : [files];
-//             const filesImage = await localFileUpload(
-//                     files,
-
-//                 );
-
-//       //extract secure urls from the uploaded images
-//       const imageUrls= filesImage.map((file)=>file.path);
-//       updateFields.image=imageUrls;
-//     console.log("imageUrl is:",imageUrls);
-//     }
-
-//     order = await Order.findByIdAndUpdate(
-//       req.params.id,
-//       { $set: updateFields },
-//       { new: true }
-//     ).populate('customer', 'name email')
-//       .populate('assignedTo', 'name email')
-//       .populate('approvedBy', 'name email')
-//       .populate('createdBy', 'name email');
-
-//     res.status(200).json({
-//       success:true,
-//       message:"order has been updated successfully",
-//       order});
-//   } catch (err) {
-//     console.error(err.message);
-//     if (err.kind === 'ObjectId') {
-//       return res.status(404).json({ msg: 'Order not found' });
-//     }
-//     res.status(500).send('Server error');
-//   }
-// };
-
-// exports.updateOrder = async (req, res) => {
-//   try {
-//     const { requirements, dimensions, assignedTo, status } = req.body;
-
-//     // Check if order exists
-//     let order = await Order.findById(req.params.id);
-//     if (!order) {
-//       return res.status(404).json({ msg: 'Order not found' });
-//     }
-
-//     const updateFields = {};
-//     if (requirements) updateFields.requirements = requirements;
-//     if (dimensions) updateFields.dimensions = dimensions;
-//     if (assignedTo) updateFields.assignedTo = assignedTo;
-//     if (status) {
-//       updateFields.status = status;
-//     }
-
-//     // Handle file uploads
-//     if(req.files && req.files.images){
-//       const files = req.files.images;
-//       const filesArray = Array.isArray(files) ? files : [files];
-//       const filesImage = await localFileUpload(files);
-//       const imageUrls = filesImage.map((file) => file.path);
-//       updateFields.image = imageUrls;
-//     }
-
-//     // Update the order
-//     order = await Order.findByIdAndUpdate(
-//       req.params.id,
-//       { $set: updateFields },
-//       { new: true }
-//     ).populate('customer', 'name email')
-//       .populate('assignedTo', 'name email')
-//       .populate('approvedBy', 'name email')
-//       .populate('createdBy', 'name email');
-
-//     // Notify users about any changes (not just status)
-//     notifyOrderUpdated(req, order, updateFields);
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Order has been updated successfully",
-//       order
-//     });
-//   } catch (err) {
-//     console.error(err.message);
-//     if (err.kind === 'ObjectId') {
-//       return res.status(404).json({ msg: 'Order not found' });
-//     }
-//     res.status(500).send('Server error');
-//   }
-// };
-// make sure the path is correct
 
 exports.updateOrder = async (req, res) => {
   try {
@@ -273,24 +161,29 @@ exports.updateOrder = async (req, res) => {
     //   updateFields.status = status;
     //   changes.push(`Status changed from "${order.status}" to "${status}"`);
     // }
-    
     if (status && status !== order.status) {
       if (status == "cutout_pending") {
         console.log("inside admin approved if ");
         updateFields.status = status;
-        changes.push(`Order Status changed from "${order.status}" to "${status}"`);
-        const { cutoutId, assignedTo: cutoutUser } = await assignOrderToCutOut(order._id, req);
+        changes.push(`Order Status changed from "${order.status}" to "${status}" by admin`);
+        const { cutoutId, assignedTo: cutoutUser, log } = await assignOrderToCutOut(order._id, req);
+        // const res = await assignOrderToCutOut(order._id, req);
+        // console.log("res is:", res);
         console.log("assigned to is:",assignedTo);
         const user1 = await User.findById(order.assignedTo);
         updateFields.assignedTo = cutoutId;
         const user2 = await User.findById(assignedTo);
+        console.log("user1 is:",assignedTo)
         console.log("user2 is:",user2)
+        // changes.push(
+        //   `Order was approved by Admin. It was initially assigned to ${user1.name} role (${user1.accountType}) and is now reassigned to ${user2.name} role(${user2.accountType})`
+        // );
         changes.push(
-          `Order was approved by Admin. It was initially assigned to ${user1.name} role (${user1.accountType}) and is now reassigned to ${user2.name} role(${user2.accountType})`
+          `${log}`
         );
       } else {
         updateFields.status = status;
-        changes.push(`Order Status changed from "${order.status}" to "${status}"`);
+        changes.push(`Order Status changed from "${order.status}" to "${status}" by admin`);
       }
     }
 

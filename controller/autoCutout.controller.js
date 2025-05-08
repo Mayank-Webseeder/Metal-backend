@@ -1,12 +1,13 @@
 
 const Order = require('../models/order.model');
 const User = require('../models/user.models');
-const Log = require("../models/log.model")
+const Log = require("../models/log.model");
+const { sendAssignmentNotification } = require("../service/websocketStatus");
 
-const sendAssignmentNotification=()=>{
-  console.log("Notification sent");
+// const sendAssignmentNotification=()=>{
+//   console.log("Notification sent");
 
-}
+// }
 
 // Helper function for auto-assignment to cutout users when status is admin_approved
 exports.assignOrderToCutOut = async (orderId, req) => {
@@ -53,7 +54,7 @@ exports.assignOrderToCutOut = async (orderId, req) => {
     });
     
     const changes = [];
-    
+    const previous = await User.findById(order.assignedTo);
     // Create log entry for the change
     if (order.assignedTo) {
       const previousUser = await User.findById(order.assignedTo);
@@ -63,7 +64,7 @@ exports.assignOrderToCutOut = async (orderId, req) => {
       
       if (previousUser) {
         changes.push(
-          `Assigned to changed from ${previousUser.name} role (${previousUser.accountType}) to ${newUser.name} role (${newUser.accountType})`
+          `Order was approved by Admin. It was initially assigned to ${previousUser.name} role (${previousUser.accountType}) and is now reassigned to ${newUser.name} role (${newUser.accountType})`
         );
       } else {
         changes.push(
@@ -75,7 +76,7 @@ exports.assignOrderToCutOut = async (orderId, req) => {
         `Order assigned to ${cutoutUser.name} role (${cutoutUser.accountType})`
       );
     }
-    
+    console.log("changes are kamal:",changes);
     // Update the order
     order.assignedTo = cutoutUserId;
     order.status = "cutout_pending";
@@ -97,11 +98,12 @@ exports.assignOrderToCutOut = async (orderId, req) => {
       .populate("assignedTo", "name email");
     
     // Send notification about the assignment
-    sendAssignmentNotification(req, order);
+    sendAssignmentNotification(req, order, previous);
 
     return {
       success: true,
       message: "Order successfully assigned to Cutout user",
+      log: changes[0],
       data: {
         order: populatedOrder
       }

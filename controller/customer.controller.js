@@ -10,6 +10,8 @@ exports.createCustomer= async(req,res)=>{
             lastName,
             email,
             phoneNo,
+            gstNo,
+            panNo,
             address,
         }=req.body;
 
@@ -66,6 +68,8 @@ exports.createCustomer= async(req,res)=>{
             lastName,
             email,
             phoneNo,
+            gstNo,
+            panNo,
             address:savedAddress ?savedAddress._id : null,
             createdBy:req.user.id
         });
@@ -97,111 +101,10 @@ exports.createCustomer= async(req,res)=>{
 }
 
 
-
-
-// exports.updateCustomer = async(req,res)=>{
-//     try {
-//         const {id}= req.params;
-//         const {firstName, lastName, email, address, phoneNo}= req.body;
-
-//         const existingCustomer = await Customer.findById(id);
-
-//         if(!existingCustomer){
-//             return res.status(404).json({
-//                 success:false,
-//                 message:"Customer not found"
-//             })
-//         }
-
-//         // Check email uniqueness if email is being updated
-//         if(email && email !== existingCustomer.email) {
-//             const trimmedEmail = email.trim();
-//             const emailExists = await Customer.findOne({ email: trimmedEmail, _id: { $ne: id } });
-//             if(emailExists) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     message: "Email already in use by another customer"
-//                 });
-//             }
-//         }
-
-//         // Check phone number uniqueness if phone number is being updated
-//         if(phoneNo && phoneNo !== existingCustomer.phoneNo) {
-//             const phoneExists = await Customer.findOne({ phoneNo, _id: { $ne: id } });
-//             if(phoneExists) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     message: "Phone number already registered with another customer"
-//                 });
-//             }
-//         }
-
-//         const updateField = {};
-//         if(firstName) updateField.firstName = firstName;
-//         if(lastName) updateField.lastName = lastName;
-//         if(email) updateField.email = email.trim();
-//         if(phoneNo) updateField.phoneNo = phoneNo;
-
-//         console.log("updateField",updateField);
-
-//         // Update the address if provided
-//         if (address) {
-//             console.log("inside address field");
-//             const existingAddress = await Address.findById(existingCustomer.address);
-//             if (!existingAddress) {
-//                 return res.status(404).json({
-//                     success: false,
-//                     message: "Address not found for the customer",
-//                 });
-//             }
-
-//             // Update the address fields
-//             if (address.street) existingAddress.street = address.street;
-//             if (address.city) existingAddress.city = address.city;
-//             if (address.state) existingAddress.state = address.state;
-//             if (address.pincode) existingAddress.pincode = address.pincode;
-//             if (address.additionalDetail) existingAddress.additionalDetail = address.additionalDetail;
-
-//             // Save the updated address
-//             await existingAddress.save();
-//         }
-
-//         const customer = await Customer.findByIdAndUpdate(id, {$set:updateField}, { new: true }).populate(
-//             "address"
-//         );
-
-//         console.log("customer is:",customer)
-
-//         return res.status(200).json({
-//             success: true,
-//             message: "Customer updated successfully",
-//             customer,
-//         });
-
-//     } catch (error) {
-//         console.error("Error updating customer", error);
-//         // Handle duplicate phone number error
-//         if(error.code === 11000 && error.keyPattern && error.keyPattern.phoneNo) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Phone number already registered with another customer"
-//             });
-//         }
-//         return res.status(500).json({
-//             success: false,
-//             message: "Error updating customer",
-//             error: error.message,
-//         });
-//     }
-// }
-
-//delete the customer
-
-
 exports.updateCustomer = async (req, res) => {
     try {
         const { id } = req.params;
-        const { firstName, lastName, email, address, phoneNo } = req.body;
+        const { firstName, lastName, email, address, phoneNo, gstNo, panNo } = req.body;
 
         let existingCustomer = await Customer.findById(id);
 
@@ -240,6 +143,8 @@ exports.updateCustomer = async (req, res) => {
         if (lastName) existingCustomer.lastName = lastName;
         if (email) existingCustomer.email = email.trim();
         if (phoneNo) existingCustomer.phoneNo = phoneNo;
+        if (gstNo !== undefined) existingCustomer.gstNo = gstNo;
+        if (panNo !== undefined) existingCustomer.panNo = panNo;
 
        
 
@@ -290,9 +195,6 @@ exports.updateCustomer = async (req, res) => {
         });
     }
 };
-
-
-
 
 
 exports.deleteCustomer = async(req,res)=>{

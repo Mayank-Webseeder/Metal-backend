@@ -21,6 +21,14 @@ const customerSchema = new mongoose.Schema({
         required:true,
         trim:true
     },
+    gstNo: {
+        type: String,
+        trim: true
+    },
+    panNo: {
+        type: String,
+        trim: true
+    },
     password:{
         type:String,
     },

@@ -1,12 +1,12 @@
 
 const Order = require('../models/order.model');
 const User = require('../models/user.models');
-const Log = require("../models/log.model")
+const Log = require("../models/log.model");
+const { sendAssignmentNotification } = require("../service/websocketStatus");
 
-const sendAssignmentNotification=()=>{
-  console.log("Notification sent");
-
-}
+// const sendAssignmentNotification=()=>{
+//   console.log("Notification sent");
+// }
 
 
 // Helper function for auto-assignment to accounts users when status is cutout_complete
@@ -55,6 +55,7 @@ exports.assignToAccounts = async (orderId, req) => {
       });
       
       const changes = [];
+      const previous = await User.findById(order.assignedTo);
       
       // Create log entry for the change
       if (order.assignedTo) {
@@ -63,7 +64,7 @@ exports.assignToAccounts = async (orderId, req) => {
         
         if (previousUser) {
           changes.push(
-            `Order Assigned has been changed from ${previousUser.name} role (${previousUser.accountType}) to ${newUser.name} role (${newUser.accountType})`
+            `Order assignment has been changed from ${previousUser.name} role (${previousUser.accountType}) to ${newUser.name} role (${newUser.accountType})`
           );
         } else {
           changes.push(
@@ -97,8 +98,10 @@ exports.assignToAccounts = async (orderId, req) => {
         .populate("assignedTo", "name email");
       
       // Send notification about the assignment
-      sendAssignmentNotification(req, order);
-  
+      sendAssignmentNotification(req, order, previous);
+      
+      //notifyOrderUpdated(req, order);
+
       return {
         success: true,
         message: "Order successfully assigned to Accounts user",

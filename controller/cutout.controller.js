@@ -73,7 +73,7 @@ exports.assignOrderToCutout = async (req, res) => {
       const user1 = await User.findById(order.assignedTo);
       const user2 = await User.findById(cutoutUser);
       changes.push(
-        `Assigned to changed from ${user1.name} role:${user1.accountType} to ${user2.name} role:${user2.accountType}`
+        `Order assignment has been changed from ${user1.name} role:${user1.accountType} to ${user2.name} role:${user2.accountType}`
       );
 
       console.log("changes is:",changes);
@@ -98,6 +98,10 @@ exports.assignOrderToCutout = async (req, res) => {
         .populate("customer", "name email")
         .populate("assignedTo", "name email");
         sendAssignmentNotification(req,order);
+
+        if (typeof changeStatusByCutout === 'function') {
+          changeStatusByCutout(req, order);
+        }
   
       return res.status(200).json({
         success: true,
@@ -118,36 +122,6 @@ exports.assignOrderToCutout = async (req, res) => {
     }
   };
 
-// exports.changeStatus= async(req,res)=>{
-//     try {
-//       const {orderId,status}= req.body;
-      
-//       const order = await Order.findOne({_id:orderId});
-     
-//       if(!order){
-//         return res.status(404).json({
-//           success:false,
-//           message:"order not found"
-//         })
-//       }
-//       order.status= status;
-//       await order.save();
-//       changeStatusByCutout(req,order);
-      
-//       return res.status(200).json({
-//         success:true,
-//         message:"order has been updated successfully"
-//       })
-      
-//     } catch (error) {
-//       console.log("error",error);
-//       return res.status(400).json({
-//         success:false,
-//         message:error.message
-//       })
-      
-//     }
-//   }
   
 exports.changeStatus = async (req, res) => {
   try {
@@ -265,6 +239,7 @@ exports.changeStatus = async (req, res) => {
       const formattedCadFiles = cadFiles.map((cad) => ({
         photo: cad.photo,
         CadFile: cad.CadFile,
+        textFiles: cad.textFiles,
       }));
 
       

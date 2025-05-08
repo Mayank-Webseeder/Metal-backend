@@ -6,9 +6,9 @@ const user = require("../models/user.models");
 //auth
 const auth= async(req,res,next)=>{ 
     try {
-        const token = req.cookies.token || req.header.token || req.header("Authorization");
+        let token = req.params.token || req.query.token || req.body.token || req.cookies.token || req.header.token || req.header("Authorization");
+        //const token = req.cookies.token || req.header.token || req.header("Authorization");
         
-
         //if token missing then return error 
         if(!token){
             return res.status(400).json({

@@ -18,22 +18,6 @@ const orderSchema = new mongoose.Schema({
   dimensions: {
     type: String,
   },
-  // status: {
-  //   type: String,
-  //   enum: [
-  //     "New",
-  //     "Assigned",
-  //     "InProgress",
-  //     "PendingApproval",
-  //     "Approved",
-  //     "InWorkQueue",
-  //     "Completed",
-  //     "InAccountSection",
-  //     "Billed",
-  //     "Paid",
-  //   ],
-  //   default: "New",
-  // },
   status: {
     type: String,
     enum: [
@@ -100,10 +84,6 @@ orderSchema.pre("save", async function (next) {
     next();
   }
 });
-
-
-
-
 
 
 module.exports = mongoose.model("Order", orderSchema);

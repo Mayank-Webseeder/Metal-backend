@@ -70,29 +70,161 @@ const transporter = nodemailer.createTransport({
 
 const sendEmail = async (email, password, name) => {
     try {
-        
+        // HTML email template
+        const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Welcome Email</title>
+            <style>
+                body {
+                    font-family: 'Arial', sans-serif;
+                    margin: 0;
+                    padding: 0;
+                    background-color: #f5f5f5;
+                    color: #333333;
+                }
+                .email-container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                    background-color: #ffffff;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+                }
+                .email-header {
+                    background-color: #f8f9fa;
+                    padding: 25px 0;
+                    text-align: center;
+                    border-bottom: 1px solid #eeeeee;
+                }
+                .logo-container {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin-bottom: 10px;
+                }
+                .logo {
+                    height: 80px;
+                    width: 150px;
+                    margin: 0 auto;
+                }
+                .email-body {
+                    padding: 30px;
+                    line-height: 1.6;
+                }
+                .email-footer {
+                    background-color: #f8f9fa;
+                    padding: 20px;
+                    text-align: center;
+                    font-size: 14px;
+                    color: #666666;
+                    border-top: 1px solid #eeeeee;
+                }
+                .credentials {
+                    background-color: #f9f9f9;
+                    padding: 15px;
+                    border-radius: 6px;
+                    margin: 20px 0;
+                    border-left: 4px solid #4a90e2;
+                }
+                .button {
+                    display: inline-block;
+                    background-color: #4a90e2;
+                    color: white;
+                    padding: 12px 24px;
+                    text-decoration: none;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    margin-top: 15px;
+                }
+                h1 {
+                    color: #4a90e2;
+                    margin-top: 0;
+                }
+                .highlight {
+                    font-weight: bold;
+                    color: #4a90e2;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="email-container">
+                <div class="email-header">
+                    <div class="logo-container">
+                        <img src="cid:companyLogo" alt="Company Logo" class="logo" />
+                    </div>
+                </div>
+                
+                <div class="email-body">
+                    <h1>Welcome Team!</h1>
+                    
+                    <p>Dear ${name},</p>
+                    
+                    <p>We are pleased to inform you that your account has been successfully created. You're now part of our Blue Star Communication!</p>
+                    
+                    <div class="credentials">
+                        <p><span class="highlight">Login Credentials:</span></p>
+                        <p>Email: ${email}</p>
+                        <p>Password: ${password}</p>
+                    </div>
+                    
+                    <p>For security reasons, we strongly recommend changing your password upon your first login.</p>
+                    
+                    <a href="#" class="button">Login to Your Account</a>
+                    
+                    <p style="margin-top: 25px;">If you have any questions or need further assistance, please feel free to reach out to our support team.</p>
+                    
+                    <p>Best regards,<br>
+                    The Admin Team</p>
+                </div>
+                
+                <div class="email-footer">
+                    <p>© 2025 Your Company. All rights reserved.</p>
+                    <p>This is an automated message, please do not reply directly to this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        `;
+
+        // Plain text alternative for email clients that don't support HTML
+        const textContent = `
+        Dear ${name},
+
+        We are pleased to inform you that your account has been successfully created.
+
+        Login Credentials:
+        - Email: ${email}
+        - Password: ${password}
+
+        For security reasons, we recommend changing your password upon your first login.
+
+        If you have any questions or need further assistance, please feel free to reach out.
+
+        Best regards,
+        Admin
+        `;
+
+        // Get path to logo file
+        const path = require('path');
+        const logoPath = path.resolve(__dirname, '../../Metal-frontend/public/logo.png');
+
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
-            subject: "Welcome Aboard: Your Account has been  Created",
-            text: `Dear ${name},
-
-
-            We are pleased to inform you that your account has been successfully created.
-
-
-
-            Login Credentials:
-            - *Email:* ${email}
-            - *Password:* ${password}
-
-            For security reasons, we recommend changing your password upon your first login.
-
-            If you have any questions or need further assistance, please feel free to reach out.
-
-            Best regards, 
-            Admin
-      `,
+            subject: "Welcome Team: Your Account has been Created",
+            text: textContent,
+            html: htmlContent,
+            attachments: [
+                {
+                    filename: 'logo.png',
+                    path: logoPath,
+                    cid: 'companyLogo' 
+                }
+            ]
         };
 
         const info = await transporter.sendMail(mailOptions);
@@ -101,8 +233,6 @@ const sendEmail = async (email, password, name) => {
         console.error("Error sending email:", error);
     }
 };
-
-
 
 
 exports.createAccount = async (req, res) => {
